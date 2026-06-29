@@ -3,8 +3,12 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem;
 
-use windows::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
-use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
+use windows::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE, LUID};
+use windows::Win32::Security::{
+    AdjustTokenPrivileges, GetTokenInformation, LookupPrivilegeValueW, TokenElevation, 
+    LUID_AND_ATTRIBUTES, SE_PRIVILEGE_ENABLED, TOKEN_ADJUST_PRIVILEGES, TOKEN_ELEVATION, 
+    TOKEN_PRIVILEGES, TOKEN_QUERY,
+};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
@@ -28,10 +32,29 @@ extern "system" {
         system_information_length: u32,
         return_length: *mut u32,
     ) -> i32;
+
+    fn NtSetSystemInformation(
+        system_information_class: u32,
+        system_information: *mut c_void,
+        system_information_length: u32,
+    ) -> i32;
 }
 
 const SYSTEM_PROCESS_INFO_CLASS: u32 = 5; // SystemProcessInformation
+const SYSTEM_POOL_TAG_INFORMATION: u32 = 22; // SystemPoolTagInformation
 const STATUS_INFO_LENGTH_MISMATCH: i32 = 0xC0000004u32 as i32;
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct SYSTEM_POOLTAG {
+    pub tag: [u8; 4],
+    pub paged_allocs: u32,
+    pub paged_frees: u32,
+    pub paged_used: usize,
+    pub non_paged_allocs: u32,
+    pub non_paged_frees: u32,
+    pub non_paged_used: usize,
+}
 
 // Field offsets in SYSTEM_PROCESS_INFORMATION on x64 Windows.
 // These are stable across all Windows 10/11 versions.
@@ -298,6 +321,76 @@ fn classify_process(name: &str) -> ProcessType {
     ProcessType::Normal
 }
 
+// ===== Pool Tag resolution =====
+
+fn resolve_pool_tag(tag: &str) -> String {
+    // Reverse the tag for friendly display if it contains trailing spaces or standard format
+    // A simplified knowledge base of common pool tags:
+    match tag {
+        "FMfn" => "File System (NTFS)".to_string(),
+        "MmSt" => "Memory Manager Section".to_string(),
+        "Thre" => "Thread Objects".to_string(),
+        "Proc" => "Process Objects".to_string(),
+        "EtwB" => "Event Tracing (ETW)".to_string(),
+        "CMnb" | "CMpb" => "Registry Config Manager".to_string(),
+        "Toke" => "Security Tokens".to_string(),
+        "DxgK" | "Dxg " => "DirectX Graphics Kernel".to_string(),
+        "Cont" => "Contiguous Physical Memory".to_string(),
+        "File" => "File Objects".to_string(),
+        "ConT" => "Console Terminal".to_string(),
+        "Se  " => "Security Subsystem".to_string(),
+        "Net " => "Network System".to_string(),
+        "NDnd" | "Ndis" => "NDIS Network Driver".to_string(),
+        "Mup " => "Multiple UNC Provider".to_string(),
+        "VfFh" | "Vf  " => "Driver Verifier".to_string(),
+        "Ntfs" | "NtFf" | "NtFD" => "NTFS File System".to_string(),
+        "tcp " | "Tcp " | "TCPT" => "TCP/IP Protocol".to_string(),
+        "afd " | "Afd " => "Ancillary Function Driver".to_string(),
+        "NpFs" => "Named Pipe File System".to_string(),
+        "ViGk" => "Video Graphics Kernel".to_string(),
+        "Udp " | "UdpA" => "UDP Protocol".to_string(),
+        "Wfp " | "WfpE" => "Windows Filtering Platform".to_string(),
+        "ALPC" | "Alpc" => "ALPC Port Objects".to_string(),
+        _ => format!("Tag: {}", tag),
+    }
+}
+
+pub fn get_pool_tags() -> Vec<SYSTEM_POOLTAG> {
+    unsafe {
+        let mut buffer_size = 1024 * 1024;
+        let mut buffer: Vec<u8> = vec![0; buffer_size as usize];
+        let mut return_length: u32 = 0;
+        
+        let mut status;
+        loop {
+            status = NtQuerySystemInformation(
+                SYSTEM_POOL_TAG_INFORMATION,
+                buffer.as_mut_ptr() as *mut c_void,
+                buffer_size,
+                &mut return_length,
+            );
+            
+            if status == 0xC0000004u32 as i32 { // STATUS_INFO_LENGTH_MISMATCH
+                buffer_size *= 2;
+                buffer = vec![0; buffer_size as usize];
+            } else {
+                break;
+            }
+        }
+
+        if status != 0 {
+            return Vec::new();
+        }
+
+        let count = *(buffer.as_ptr() as *const u32);
+        let offset = if cfg!(target_pointer_width = "64") { 8 } else { 4 };
+        let tags_ptr = (buffer.as_ptr() as *const u8).add(offset) as *const SYSTEM_POOLTAG;
+        let tags = std::slice::from_raw_parts(tags_ptr, count as usize);
+
+        tags.to_vec()
+    }
+}
+
 // ===== System Memory Info =====
 
 /// Get system-wide memory information using GlobalMemoryStatusEx + GetPerformanceInfo.
@@ -462,7 +555,103 @@ pub fn get_process_tree_with_summary() -> (MemorySummary, Vec<ProcessTreeNode>) 
     // This includes kernel pools, system cache, drivers, page tables, etc.
     summary.non_process_memory = summary.used_physical.saturating_sub(total_process_ws);
 
-    let tree = build_process_tree(processes);
+    let mut tree = build_process_tree(processes);
+
+    // --- Fetch Pool Tags ---
+    let pool_tags = get_pool_tags();
+    
+    let mut nonpaged_tags = pool_tags.clone();
+    nonpaged_tags.sort_by(|a, b| b.non_paged_used.cmp(&a.non_paged_used));
+    
+    let mut paged_tags = pool_tags;
+    paged_tags.sort_by(|a, b| b.paged_used.cmp(&a.paged_used));
+
+    // --- Thêm các node ảo để hiển thị phần RAM hệ thống bị chiếm giữ trên Treemap ---
+    let create_virtual_node_with_children = |pid: u32, name: &str, size: u64, mut children: Vec<ProcessTreeNode>| -> ProcessTreeNode {
+        // Adjust children sizes so they don't exceed the parent size
+        let mut accounted = 0;
+        let mut valid_children = Vec::new();
+        for mut child in children {
+            if accounted + child.subtree_working_set > size {
+                // Ignore children that would overflow the allocated size
+                continue;
+            }
+            accounted += child.subtree_working_set;
+            valid_children.push(child);
+        }
+        
+        ProcessTreeNode {
+            process: ProcessInfo {
+                pid,
+                parent_pid: 0,
+                name: name.to_string(),
+                working_set: size.saturating_sub(accounted), // The parent itself takes the remaining unaccounted space
+                private_bytes: size.saturating_sub(accounted),
+                process_type: ProcessType::System,
+            },
+            children: valid_children,
+            subtree_working_set: size,
+            subtree_private_bytes: size,
+        }
+    };
+    
+    let create_child_node = |pid: u32, parent_pid: u32, name: &str, size: u64| -> ProcessTreeNode {
+        ProcessTreeNode {
+            process: ProcessInfo {
+                pid,
+                parent_pid,
+                name: name.to_string(),
+                working_set: size,
+                private_bytes: size,
+                process_type: ProcessType::System,
+            },
+            children: Vec::new(),
+            subtree_working_set: size,
+            subtree_private_bytes: size,
+        }
+    };
+
+    let mut remaining = summary.non_process_memory;
+    
+    let nonpaged_to_show = remaining.min(summary.kernel_nonpaged);
+    if nonpaged_to_show > 0 {
+        let parent_pid = u32::MAX - 1;
+        let mut children = Vec::new();
+        for (i, tag) in nonpaged_tags.into_iter().take(40).enumerate() {
+            if tag.non_paged_used > 0 {
+                let tag_str = String::from_utf8_lossy(&tag.tag);
+                let friendly_name = resolve_pool_tag(&tag_str);
+                children.push(create_child_node(u32::MAX - 100 - i as u32, parent_pid, &friendly_name, tag.non_paged_used as u64));
+            }
+        }
+        
+        tree.push(create_virtual_node_with_children(parent_pid, "Kernel NonPaged Pool", nonpaged_to_show, children));
+        remaining -= nonpaged_to_show;
+    }
+
+    let paged_to_show = remaining.min(summary.kernel_paged);
+    if paged_to_show > 0 {
+        let parent_pid = u32::MAX - 2;
+        let mut children = Vec::new();
+        for (i, tag) in paged_tags.into_iter().take(40).enumerate() {
+            if tag.paged_used > 0 {
+                let tag_str = String::from_utf8_lossy(&tag.tag);
+                let friendly_name = resolve_pool_tag(&tag_str);
+                children.push(create_child_node(u32::MAX - 1000 - i as u32, parent_pid, &friendly_name, tag.paged_used as u64));
+            }
+        }
+        
+        tree.push(create_virtual_node_with_children(parent_pid, "Kernel Paged Pool", paged_to_show, children));
+        remaining -= paged_to_show;
+    }
+    
+    if remaining > 0 {
+        tree.push(create_virtual_node_with_children(u32::MAX - 3, "Hardware Drivers / Page Tables", remaining, Vec::new()));
+    }
+
+    // Sắp xếp lại tree để các node hệ thống lớn nằm lên trên
+    tree.sort_by(|a, b| b.subtree_working_set.cmp(&a.subtree_working_set));
+
     (summary, tree)
 }
 
@@ -483,6 +672,28 @@ pub fn describe_process(name: &str) -> Option<ProcessDescription> {
     let lower = name.to_lowercase();
 
     match lower.as_str() {
+        // ===== Virtual System Memory Nodes =====
+        "kernel nonpaged pool" => Some(ProcessDescription {
+            what: "Kernel NonPaged Pool".to_string(),
+            description: "Vùng nhớ của hệ điều hành bị khóa cứng trên RAM. Thường chứa dữ liệu quan trọng của Kernel, driver card đồ họa (GPU), driver mạng không thể swap ra ổ cứng.".to_string(),
+            belongs_to: "Windows OS".to_string(),
+            importance: "Bắt buộc — Quản lý bởi OS & Driver".to_string(),
+            can_kill: false,
+        }),
+        "kernel paged pool" => Some(ProcessDescription {
+            what: "Kernel Paged Pool".to_string(),
+            description: "Vùng nhớ của hệ điều hành có thể đẩy ra ổ cứng (Pagefile) khi thiếu RAM. Chứa dữ liệu ít quan trọng hơn của hệ thống và các ứng dụng.".to_string(),
+            belongs_to: "Windows OS".to_string(),
+            importance: "Bắt buộc — Quản lý bởi OS".to_string(),
+            can_kill: false,
+        }),
+        "hardware drivers / page tables" => Some(ProcessDescription {
+            what: "Hardware, Page Tables & Cache".to_string(),
+            description: "Dung lượng RAM bị chiếm bởi bảng phân trang (Page Tables) để quản lý bộ nhớ, File System Cache (bộ đệm file), và các driver phần cứng cấp thấp không báo cáo trực tiếp qua Paged/NonPaged pool.".to_string(),
+            belongs_to: "Windows OS".to_string(),
+            importance: "Bắt buộc — Kiến trúc cốt lõi của Windows".to_string(),
+            can_kill: false,
+        }),
         // ===== System Critical (cannot kill) =====
         "system" | "[system process]" => Some(ProcessDescription {
             what: "Windows Kernel".to_string(),
@@ -1209,6 +1420,137 @@ pub fn optimize_memory(mode: u8) -> Result<u64, String> {
 
     // Give system a tiny moment to flush pages before measuring again
     std::thread::sleep(std::time::Duration::from_millis(500));
+
+    // Get memory after
+    let mut mem_status_after = MEMORYSTATUSEX::default();
+    mem_status_after.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+    unsafe { GlobalMemoryStatusEx(&mut mem_status_after).map_err(|e| e.to_string())? };
+    let avail_after = mem_status_after.ullAvailPhys;
+
+    let freed = if avail_after > avail_before {
+        avail_after - avail_before
+    } else {
+        0
+    };
+
+    Ok(freed)
+}
+
+// ===== Deep Clean (Kernel Caches & Standby List) =====
+
+fn enable_privilege(privilege_name: &str) -> Result<(), String> {
+    unsafe {
+        let mut token = windows::Win32::Foundation::HANDLE::default();
+        if OpenProcessToken(
+            GetCurrentProcess(),
+            TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES,
+            &mut token,
+        )
+        .is_err()
+        {
+            return Err("Failed to open process token".into());
+        }
+
+        let mut luid = LUID::default();
+        let wide_name: Vec<u16> = privilege_name.encode_utf16().chain(std::iter::once(0)).collect();
+        if LookupPrivilegeValueW(None, windows::core::PCWSTR(wide_name.as_ptr()), &mut luid).is_err() {
+            let _ = CloseHandle(token);
+            return Err(format!("Failed to lookup privilege: {}", privilege_name));
+        }
+
+        let mut privileges = TOKEN_PRIVILEGES {
+            PrivilegeCount: 1,
+            Privileges: [LUID_AND_ATTRIBUTES {
+                Luid: luid,
+                Attributes: SE_PRIVILEGE_ENABLED,
+            }],
+        };
+
+        let result = AdjustTokenPrivileges(
+            token,
+            false,
+            Some(&mut privileges as *mut _ as *mut _),
+            std::mem::size_of::<TOKEN_PRIVILEGES>() as u32,
+            None,
+            None,
+        );
+
+        let _ = CloseHandle(token);
+
+        if result.is_err() {
+            return Err(format!("Failed to adjust privilege: {}", privilege_name));
+        }
+    }
+    Ok(())
+}
+
+const SYSTEM_MEMORY_LIST_INFORMATION: u32 = 80;
+const MEMORY_EMPTY_WORKING_SETS: u32 = 2;
+const MEMORY_PURGE_STANDBY_LIST: u32 = 4;
+const MEMORY_PURGE_LOW_PRIORITY_STANDBY_LIST: u32 = 5;
+
+pub fn deep_clean_memory() -> Result<u64, String> {
+    if !is_elevated() {
+        return Err("Bạn cần chạy ResMonix dưới quyền Administrator để sử dụng Deep Clean.".to_string());
+    }
+
+    // Attempt to enable SeProfileSingleProcessPrivilege for NtSetSystemInformation
+    let _ = enable_privilege("SeProfileSingleProcessPrivilege");
+    // Attempt to enable SeIncreaseQuotaPrivilege for SetSystemFileCacheSize
+    let _ = enable_privilege("SeIncreaseQuotaPrivilege");
+
+    // Get memory before
+    let mut mem_status = MEMORYSTATUSEX::default();
+    mem_status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+    unsafe { GlobalMemoryStatusEx(&mut mem_status).map_err(|e| e.to_string())? };
+    let avail_before = mem_status.ullAvailPhys;
+
+    // 1. Clear system file cache via standard Win32 API
+    unsafe {
+        let _ = SetSystemFileCacheSize(usize::MAX, usize::MAX, 0);
+    }
+
+    // 2. Clear all process working sets
+    let processes = enumerate_all_processes();
+    for p in processes {
+        unsafe {
+            let handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_QUOTA, false, p.pid);
+            if let Ok(h) = handle {
+                let _ = EmptyWorkingSet(h);
+                let _ = CloseHandle(h);
+            }
+        }
+    }
+
+    // 3. Purge system working set and standby lists using NT API
+    unsafe {
+        // Empty system working set
+        let mut command: u32 = MEMORY_EMPTY_WORKING_SETS;
+        let _ = NtSetSystemInformation(
+            SYSTEM_MEMORY_LIST_INFORMATION,
+            &mut command as *mut _ as *mut c_void,
+            std::mem::size_of::<u32>() as u32,
+        );
+
+        // Purge standby list (this is where most file cache ends up after being flushed)
+        command = MEMORY_PURGE_STANDBY_LIST;
+        let _ = NtSetSystemInformation(
+            SYSTEM_MEMORY_LIST_INFORMATION,
+            &mut command as *mut _ as *mut c_void,
+            std::mem::size_of::<u32>() as u32,
+        );
+        
+        // Purge low priority standby list as well
+        command = MEMORY_PURGE_LOW_PRIORITY_STANDBY_LIST;
+        let _ = NtSetSystemInformation(
+            SYSTEM_MEMORY_LIST_INFORMATION,
+            &mut command as *mut _ as *mut c_void,
+            std::mem::size_of::<u32>() as u32,
+        );
+    }
+
+    // Wait a little for OS to flush
+    std::thread::sleep(std::time::Duration::from_millis(800));
 
     // Get memory after
     let mut mem_status_after = MEMORYSTATUSEX::default();
