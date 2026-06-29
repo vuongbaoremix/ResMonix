@@ -1,4 +1,5 @@
 import { useDiskStore } from "@/store/useDiskStore";
+import { useTranslation } from "react-i18next";
 import { formatSize, getRiskVariant } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,22 +32,23 @@ function getActionIcon(type: ActionType) {
   }
 }
 
-function getActionLabel(type: ActionType): string {
+function getActionLabel(type: ActionType, t: any): string {
   switch (type) {
     case "direct_delete":
-      return "Xóa trực tiếp";
+      return t("disk.action_direct_delete");
     case "tool_required":
-      return "Cần dùng công cụ";
+      return t("disk.action_tool_required");
     case "config_change":
-      return "Thay đổi cấu hình";
+      return t("disk.action_config_change");
     case "reinstallable":
-      return "Có thể cài lại";
+      return t("disk.action_reinstallable");
     case "move_to_other_drive":
-      return "Di chuyển sang ổ khác";
+      return t("disk.action_move");
   }
 }
 
 export function SuggestionPanel() {
+  const { t } = useTranslation();
   const { suggestions } = useDiskStore();
 
   const totalSavings = suggestions.reduce(
@@ -59,8 +61,8 @@ export function SuggestionPanel() {
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
         <div className="text-center space-y-2">
           <Lightbulb className="h-12 w-12 mx-auto opacity-20" />
-          <p>Quét ổ đĩa để nhận đề xuất</p>
-          <p className="text-xs">tối ưu dung lượng</p>
+          <p>{t("disk.scan_to_suggest")}</p>
+          <p className="text-xs">{t("disk.optimize_space")}</p>
         </div>
       </div>
     );
@@ -73,10 +75,10 @@ export function SuggestionPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-sm">Đề xuất tối ưu</h2>
+            <h2 className="font-semibold text-sm">{t("disk.optimization_suggestions")}</h2>
           </div>
           <Badge variant="secondary" className="text-xs">
-            Có thể giải phóng {formatSize(totalSavings)}
+            {t("disk.can_free")} {formatSize(totalSavings)}
           </Badge>
         </div>
 
@@ -107,7 +109,7 @@ export function SuggestionPanel() {
 
                 <div className="flex items-center gap-2 text-[11px]">
                   <Badge variant="outline" className="text-[10px]">
-                    {getActionLabel(suggestion.action_type)}
+                    {getActionLabel(suggestion.action_type, t)}
                   </Badge>
                   <span className="text-muted-foreground">
                     {suggestion.category}
@@ -123,7 +125,7 @@ export function SuggestionPanel() {
                 {suggestion.paths.length > 0 && (
                   <details className="text-xs">
                     <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                      {suggestion.paths.length} đường dẫn
+                      {suggestion.paths.length} {t("disk.paths")}
                     </summary>
                     <ul className="mt-1 space-y-0.5 max-h-24 overflow-y-auto">
                       {suggestion.paths.slice(0, 10).map((path, i) => (
@@ -136,7 +138,7 @@ export function SuggestionPanel() {
                       ))}
                       {suggestion.paths.length > 10 && (
                         <li className="text-[11px] text-muted-foreground">
-                          ... và {suggestion.paths.length - 10} đường dẫn khác
+                          {t("disk.and_other_paths", { count: suggestion.paths.length - 10 })}
                         </li>
                       )}
                     </ul>
@@ -150,7 +152,7 @@ export function SuggestionPanel() {
                     className="w-full text-xs gap-1.5 mt-1"
                   >
                     <Trash2 className="h-3 w-3" />
-                    Dọn dẹp
+                    {t("disk.cleanup")}
                   </Button>
                 )}
               </CardContent>

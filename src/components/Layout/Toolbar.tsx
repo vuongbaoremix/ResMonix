@@ -8,6 +8,7 @@ import {
   Moon,
   Sun,
   Activity,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +16,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 export function Toolbar() {
   const { isDarkMode, toggleDarkMode } = useDiskStore();
+  const { i18n } = useTranslation();
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === "vi" ? "en" : "vi";
+    i18n.changeLanguage(newLang);
+  };
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-card shrink-0">
@@ -47,6 +55,23 @@ export function Toolbar() {
         </TooltipTrigger>
         <TooltipContent>
           {isDarkMode ? "Light Mode" : "Dark Mode"}
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Language toggle */}
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-xs font-semibold"
+            onClick={toggleLanguage}
+          >
+            {i18n.language === "vi" ? "VI" : "EN"}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Language (EN/VI)
         </TooltipContent>
       </Tooltip>
     </div>

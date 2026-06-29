@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useEffect, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { useDiskStore } from "@/store/useDiskStore";
 import { formatSize, formatDate, formatNumber, getRiskClass } from "@/lib/format";
 import type { FileNodeSummary, DiskSortField } from "@/types";
@@ -91,7 +92,7 @@ const TreeNode = React.memo(function TreeNode({
 
       const currentLower = currentDir.toLowerCase();
       if (currentLower.startsWith(normalizedPath.toLowerCase()) ||
-          currentLower.startsWith(normalizedPathForward.toLowerCase())) {
+        currentLower.startsWith(normalizedPathForward.toLowerCase())) {
         return true;
       }
     }
@@ -191,7 +192,7 @@ const TreeNode = React.memo(function TreeNode({
         </span>
 
         {/* Physical Size (Estimated) */}
-        <span className="text-muted-foreground text-[11px] w-20 text-right shrink-0 tabular-nums hidden lg:block">
+        <span className="text-muted-foreground text-[11px] w-30 text-right shrink-0 tabular-nums hidden lg:block">
           {formatSize(Math.ceil(node.size / 4096) * 4096)}
         </span>
 
@@ -220,6 +221,7 @@ TreeNode.displayName = "TreeNode";
 // ===== Main Virtual Tree =====
 
 export function VirtualTree() {
+  const { t } = useTranslation();
   const rootNode = useDiskStore((state) => state.rootNode);
   const isScanning = useDiskStore((state) => state.isScanning);
   const refreshVisibleNodes = useDiskStore((state) => state.refreshVisibleNodes);
@@ -274,7 +276,7 @@ export function VirtualTree() {
             <div className="absolute inset-0 rounded-full border-2 border-muted" />
             <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
-          <p>Preparing scan...</p>
+          <p>{t("disk.preparing_scan")}</p>
         </div>
       </div>
     );
@@ -285,22 +287,22 @@ export function VirtualTree() {
       {/* Header Row — Sortable columns */}
       <div className="flex items-center gap-2 py-1.5 px-2 border-b text-xs font-semibold text-muted-foreground bg-muted/30 sticky top-0 z-10 shrink-0 pr-4">
         <div className="flex-1 min-w-0 pl-6">
-          <SortHeader field="name" label="Name" />
+          <SortHeader field="name" label={t("disk.name")} />
         </div>
         <div className="w-[100px] shrink-0 text-right">
-          <SortHeader field="size" label="Percent" className="text-right" />
+          <SortHeader field="size" label={t("disk.percent")} className="text-right" />
         </div>
         <div className="w-20 shrink-0 text-right">
-          <SortHeader field="size" label="Size" className="text-right" />
+          <SortHeader field="size" label={t("disk.size")} className="text-right" />
         </div>
-        <div className="w-20 shrink-0 text-right hidden lg:block">
-          Physical Size
+        <div className="w-30 shrink-0 text-right hidden lg:block">
+          {t("disk.physical_size")}
         </div>
         <div className="w-16 shrink-0 text-right">
-          <SortHeader field="items" label="Items" className="text-right" />
+          <SortHeader field="items" label={t("disk.items")} className="text-right" />
         </div>
         <div className="w-28 shrink-0 text-right hidden md:block">
-          <SortHeader field="modified" label="Modified" className="text-right" />
+          <SortHeader field="modified" label={t("disk.modified")} className="text-right" />
         </div>
       </div>
 

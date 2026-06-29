@@ -1,4 +1,5 @@
 import { useDiskStore } from "@/store/useDiskStore";
+import { useTranslation } from "react-i18next";
 import { formatSize } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { HardDrive, Usb, Network, Disc } from "lucide-react";
@@ -19,12 +20,13 @@ function getDriveIcon(driveType: string) {
 }
 
 export function DriveSelector() {
+  const { t } = useTranslation();
   const { drives, selectedDrive, selectDrive, startScan } = useDiskStore();
 
   if (drives.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p className="text-sm">Đang tải danh sách ổ đĩa...</p>
+        <p className="text-sm">{t("dashboard.loading_drives")}</p>
       </div>
     );
   }
@@ -34,7 +36,7 @@ export function DriveSelector() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold mb-2">ResMonix</h1>
         <p className="text-muted-foreground text-sm">
-          Chọn ổ đĩa để bắt đầu phân tích
+          {t("dashboard.select_drive")}
         </p>
       </div>
 
@@ -87,10 +89,10 @@ export function DriveSelector() {
                       </div>
                       <div className="flex justify-between text-[11px] text-muted-foreground">
                         <span>
-                          {formatSize(drive.used_space)} đã dùng
+                          {formatSize(drive.used_space)} {t("dashboard.used")}
                         </span>
                         <span>
-                          {formatSize(drive.free_space)} trống
+                          {formatSize(drive.free_space)} {t("dashboard.free_space")}
                         </span>
                       </div>
                     </div>

@@ -12,7 +12,7 @@ interface MemoryStore {
   isLoading: boolean;
   expandedPids: Set<number>;
   selectedPid: number | null;
-  processDescription: ProcessDescription | null;
+
   processAnalysis: ProcessAnalysis | null;
   onlineInfo: OnlineProcessInfo | null;
   isAnalyzing: boolean;
@@ -27,7 +27,7 @@ interface MemoryStore {
   fetchProcessTree: () => Promise<void>;
   toggleNode: (pid: number) => void;
   selectProcess: (pid: number | null) => void;
-  describeProcess: (name: string) => Promise<void>;
+
   analyzeProcess: (pid: number) => Promise<void>;
   killProcess: (pid: number) => Promise<void>;
   setMemorySubView: (subView: MemorySubView) => void;
@@ -84,7 +84,7 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
   isLoading: false,
   expandedPids: new Set(),
   selectedPid: null,
-  processDescription: null,
+
   processAnalysis: null,
   onlineInfo: null,
   isAnalyzing: false,
@@ -160,9 +160,7 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
         return null;
       };
       const name = findProcess(processTree);
-      if (name) {
-        get().describeProcess(name);
-      }
+
       // Auto-analyze
       get().analyzeProcess(pid);
       // Auto-lookup online
@@ -175,14 +173,7 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
     }
   },
 
-  describeProcess: async (name: string) => {
-    try {
-      const description = await invoke<ProcessDescription | null>("describe_process", { name });
-      set({ processDescription: description });
-    } catch (error) {
-      console.error("Failed to describe process:", error);
-    }
-  },
+
 
   analyzeProcess: async (pid: number) => {
     set({ isAnalyzing: true, processAnalysis: null });
@@ -203,7 +194,7 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
       // Clear selection if the killed process was selected
       const { selectedPid } = get();
       if (selectedPid === pid) {
-        set({ selectedPid: null, processDescription: null });
+        set({ selectedPid: null });
       }
     } catch (error) {
       console.error("Failed to kill process:", error);

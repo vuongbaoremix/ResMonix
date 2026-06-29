@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { message, ask } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useMemoryStore } from "@/store/useMemoryStore";
@@ -51,6 +52,7 @@ import {
 // ===== Memory Overview Bar =====
 
 function MemoryOverviewBar() {
+  const { t } = useTranslation();
   const summary = useMemoryStore((s) => s.memorySummary);
 
   if (!summary) return null;
@@ -78,7 +80,7 @@ function MemoryOverviewBar() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between text-xs mb-1">
             <span className="font-medium">
-              Physical Memory
+              {t("memory.physical_memory")}
             </span>
             <span className="text-muted-foreground tabular-nums">
               {formatSize(summary.used_physical)} / {formatSize(total)}
@@ -102,7 +104,7 @@ function MemoryOverviewBar() {
                 width: `${processWsPercent}%`,
                 backgroundColor: "oklch(0.65 0.18 250)",
               }}
-              title={`Processes: ${formatSize(summary.total_process_ws)} (${processWsPercent.toFixed(1)}%)`}
+              title={`${t("memory.processes")}: ${formatSize(summary.total_process_ws)} (${processWsPercent.toFixed(1)}%)`}
             />
             {/* Kernel Memory */}
             <div
@@ -111,7 +113,7 @@ function MemoryOverviewBar() {
                 width: `${kernelPercent}%`,
                 backgroundColor: "oklch(0.63 0.24 25 / 80%)",
               }}
-              title={`Kernel: ${formatSize(summary.kernel_total)} (${kernelPercent.toFixed(1)}%)`}
+              title={`${t("memory.kernel")}: ${formatSize(summary.kernel_total)} (${kernelPercent.toFixed(1)}%)`}
             />
             {/* Other (cache, drivers, modified pages, etc.) */}
             <div
@@ -120,7 +122,7 @@ function MemoryOverviewBar() {
                 width: `${otherPercent}%`,
                 backgroundColor: "oklch(0.75 0.18 75 / 70%)",
               }}
-              title={`Cache/Drivers/Other: ${formatSize(otherUsed)} (${otherPercent.toFixed(1)}%)`}
+              title={`${t("memory.cache_other")}: ${formatSize(otherUsed)} (${otherPercent.toFixed(1)}%)`}
             />
           </div>
         </div>
@@ -131,25 +133,25 @@ function MemoryOverviewBar() {
         {/* Breakdown */}
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: "oklch(0.65 0.18 250)" }} />
-          Processes: <strong className="text-foreground">{formatSize(summary.total_process_ws)}</strong>
+          {t("memory.processes")}: <strong className="text-foreground">{formatSize(summary.total_process_ws)}</strong>
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: "oklch(0.63 0.24 25 / 80%)" }} />
-          Kernel: <strong className="text-foreground">{formatSize(summary.kernel_total)}</strong>
-          <span className="text-muted-foreground/60">(Paged {formatSize(summary.kernel_paged)} + NonPaged {formatSize(summary.kernel_nonpaged)})</span>
+          {t("memory.kernel")}: <strong className="text-foreground">{formatSize(summary.kernel_total)}</strong>
+          <span className="text-muted-foreground/60">({t("memory.paged")} {formatSize(summary.kernel_paged)} + {t("memory.non_paged")} {formatSize(summary.kernel_nonpaged)})</span>
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: "oklch(0.75 0.18 75 / 70%)" }} />
-          Cache/Other: <strong className="text-foreground">{formatSize(otherUsed)}</strong>
+          {t("memory.cache_other")}: <strong className="text-foreground">{formatSize(otherUsed)}</strong>
         </span>
 
         <span className="text-muted-foreground/40">|</span>
 
         <span className="flex items-center gap-1">
-          Available: <strong className="text-foreground">{formatSize(summary.available_physical)}</strong>
+          {t("memory.available")}: <strong className="text-foreground">{formatSize(summary.available_physical)}</strong>
         </span>
         <span className="flex items-center gap-1">
-          Commit: <strong className="text-foreground">{formatSize(summary.commit_total)}</strong>
+          {t("memory.commit")}: <strong className="text-foreground">{formatSize(summary.commit_total)}</strong>
           <span className="text-muted-foreground/60">/ {formatSize(summary.commit_limit)}</span>
           <span className="font-medium" style={{
             color: commitPercent > 80 ? "oklch(0.75 0.18 75)" : "inherit",
@@ -158,7 +160,7 @@ function MemoryOverviewBar() {
           </span>
         </span>
         <span>
-          Processes: <strong className="text-foreground">{formatNumber(summary.process_count)}</strong>
+          {t("memory.processes")}: <strong className="text-foreground">{formatNumber(summary.process_count)}</strong>
         </span>
 
         {/* Process type legend */}
@@ -196,6 +198,7 @@ function LegendItem({
 // ===== Toolbar =====
 
 function MemoryToolbar() {
+  const { t } = useTranslation();
   const fetchProcessTree = useMemoryStore((s) => s.fetchProcessTree);
   const isLoading = useMemoryStore((s) => s.isLoading);
   const searchQuery = useMemoryStore((s) => s.searchQuery);
@@ -215,32 +218,32 @@ function MemoryToolbar() {
     try {
       const freedBytes = await optimizeMemory(mode);
       if (freedBytes > 0) {
-        await message(`Thành công! Đã giải phóng ${formatSize(freedBytes)} RAM.`, { title: "Tối ưu RAM", kind: "info" });
+        await message(t("memory.optimize_success", { size: formatSize(freedBytes) }), { title: t("memory.optimize_btn"), kind: "info" });
       } else {
-        await message("Đã tối ưu RAM thành công.", { title: "Tối ưu RAM", kind: "info" });
+        await message(t("memory.optimize_done"), { title: t("memory.optimize_btn"), kind: "info" });
       }
     } catch (e: any) {
-      await message(`Lỗi: ${e}`, { title: "Lỗi Tối ưu RAM", kind: "error" });
+      await message(t("memory.error", { msg: e }), { title: t("memory.optimize_error"), kind: "error" });
     } finally {
       setIsOptimizing(false);
     }
   };
 
   const handleDeepClean = async () => {
-    const confirmed = await ask("Tính năng xả sâu bộ đệm (Deep Clean) sẽ xóa hoàn toàn File Cache và Danh sách chờ (Standby List) của hệ thống để thu hồi tối đa lượng RAM có thể.\n\nHành động này có thể làm giảm nhẹ tốc độ truy xuất ổ cứng trong ít phút đầu sau khi dọn.\n\nTiếp tục chạy Deep Clean?", { title: "Cảnh báo xả bộ đệm sâu", kind: "warning" });
+    const confirmed = await ask(t("memory.deep_clean_prompt"), { title: t("memory.deep_clean_warning"), kind: "warning" });
     if (!confirmed) return;
 
     setIsDeepCleaning(true);
     try {
       const freedBytes = await invoke<number>("deep_clean_memory");
       if (freedBytes > 0) {
-        await message(`Tuyệt vời! Đã thu hồi thành công ${formatSize(freedBytes)} RAM từ hệ thống.`, { title: "Deep Clean", kind: "info" });
+        await message(t("memory.deep_clean_success", { size: formatSize(freedBytes) }), { title: "Deep Clean", kind: "info" });
       } else {
-        await message("Đã chạy Deep Clean hoàn tất (không có thêm nhiều RAM được thu hồi).", { title: "Deep Clean", kind: "info" });
+        await message(t("memory.deep_clean_done"), { title: "Deep Clean", kind: "info" });
       }
       fetchProcessTree(); // Refresh UI
     } catch (e: any) {
-      await message(`Lỗi: ${e}`, { title: "Lỗi Deep Clean", kind: "error" });
+      await message(t("memory.error", { msg: e }), { title: t("memory.deep_clean_error"), kind: "error" });
     } finally {
       setIsDeepCleaning(false);
     }
@@ -252,7 +255,7 @@ function MemoryToolbar() {
       <div className="relative flex-1 max-w-xs">
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
-          placeholder="Tìm process..."
+          placeholder={t("memory.search_process")}
           value={searchQuery}
           onChange={(e) => setSearch(e.target.value)}
           className="h-7 pl-7 text-xs"
@@ -270,7 +273,7 @@ function MemoryToolbar() {
                 <ChevronsUpDown className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Expand All</TooltipContent>
+            <TooltipContent>{t("memory.expand_all")}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger>
@@ -278,7 +281,7 @@ function MemoryToolbar() {
                 <ChevronsDownUp className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Collapse All</TooltipContent>
+            <TooltipContent>{t("memory.collapse_all")}</TooltipContent>
           </Tooltip>
 
           <div className="h-5 w-px bg-border" />
@@ -299,11 +302,11 @@ function MemoryToolbar() {
             ) : (
               <Play className="h-3 w-3" />
             )}
-            {autoRefresh ? "Auto" : "Auto"}
+            {autoRefresh ? t("memory.auto") : t("memory.auto")}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {autoRefresh ? "Tắt auto-refresh (3s)" : "Bật auto-refresh (3s)"}
+          {autoRefresh ? t("memory.turn_off_auto") : t("memory.turn_on_auto")}
         </TooltipContent>
       </Tooltip>
 
@@ -320,7 +323,7 @@ function MemoryToolbar() {
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Refresh</TooltipContent>
+        <TooltipContent>{t("memory.refresh")}</TooltipContent>
       </Tooltip>
 
       <div className="flex-1" />
@@ -344,7 +347,7 @@ function MemoryToolbar() {
             ) : (
               <Rocket className="h-3.5 w-3.5" />
             )}
-            {isDeepCleaning ? "Đang xả RAM..." : "Deep Clean"}
+            {isDeepCleaning ? t("memory.deep_cleaning") : "Deep Clean"}
             
             {/* Thrust animation effect when running */}
             {isDeepCleaning && (
@@ -353,8 +356,8 @@ function MemoryToolbar() {
           </Button>
         </TooltipTrigger>
         <TooltipContent className="bg-red-950 text-white border-red-800">
-          <p className="font-semibold">Deep Clean (Yêu cầu quyền Admin)</p>
-          <p className="text-xs text-red-200 mt-1">Xả sâu toàn bộ File Cache và Standby List để thu hồi RAM triệt để.</p>
+          <p className="font-semibold">{t("memory.deep_clean_tooltip")}</p>
+          <p className="text-xs text-red-200 mt-1">{t("memory.deep_clean_desc_tooltip")}</p>
         </TooltipContent>
       </Tooltip>
 
@@ -366,30 +369,30 @@ function MemoryToolbar() {
           render={<Button size="sm" variant="secondary" className="h-7 gap-1.5 text-xs bg-oklch-primary/10 text-primary hover:bg-oklch-primary/20" disabled={isOptimizing} />}
         >
           <Wand2 className={`h-3.5 w-3.5 ${isOptimizing ? "animate-pulse" : ""}`} />
-          {isOptimizing ? "Đang tối ưu..." : "Tối ưu RAM"}
+          {isOptimizing ? t("memory.optimizing") : t("memory.optimize_btn")}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-xs">Chế độ tối ưu</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">{t("memory.optimize_mode")}</DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => handleOptimize(0)} className="text-xs cursor-pointer">
             <div className="flex flex-col gap-1">
-              <span className="font-medium text-[oklch(0.65_0.19_145)]">🟢 Cơ bản</span>
-              <span className="text-muted-foreground text-[10px]">Dọn dẹp app người dùng</span>
+              <span className="font-medium text-[oklch(0.65_0.19_145)]">{t("memory.basic")}</span>
+              <span className="text-muted-foreground text-[10px]">{t("memory.basic_desc")}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleOptimize(1)} className="text-xs cursor-pointer">
             <div className="flex flex-col gap-1">
-              <span className="font-medium text-[oklch(0.75_0.18_75)]">🟡 Tiêu chuẩn</span>
-              <span className="text-muted-foreground text-[10px]">Dọn dẹp toàn bộ ứng dụng</span>
+              <span className="font-medium text-[oklch(0.75_0.18_75)]">{t("memory.standard")}</span>
+              <span className="text-muted-foreground text-[10px]">{t("memory.standard_desc")}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => handleOptimize(2)} className="text-xs cursor-pointer">
             <div className="flex flex-col gap-1">
-              <span className="font-medium text-[oklch(0.63_0.24_25)]">🔴 Tối đa (Cần Admin)</span>
-              <span className="text-muted-foreground text-[10px]">Dọn toàn bộ ứng dụng + File Cache</span>
+              <span className="font-medium text-[oklch(0.63_0.24_25)]">{t("memory.max")}</span>
+              <span className="text-muted-foreground text-[10px]">{t("memory.max_desc")}</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -410,7 +413,7 @@ function MemoryToolbar() {
               <List className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Process Tree</TooltipContent>
+          <TooltipContent>{t("memory.view_tree")}</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger>
@@ -423,7 +426,7 @@ function MemoryToolbar() {
               <LayoutGrid className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Memory Treemap</TooltipContent>
+          <TooltipContent>{t("memory.view_treemap")}</TooltipContent>
         </Tooltip>
       </div>
     </div>
@@ -433,6 +436,7 @@ function MemoryToolbar() {
 // ===== Main Memory View =====
 
 export function MemoryView() {
+  const { t } = useTranslation();
   const fetchProcessTree = useMemoryStore((s) => s.fetchProcessTree);
   const autoRefresh = useMemoryStore((s) => s.autoRefresh);
   const processTree = useMemoryStore((s) => s.processTree);
@@ -465,7 +469,7 @@ export function MemoryView() {
             <div className="absolute inset-0 rounded-full border-2 border-muted" />
             <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
-          <p>Đang tải danh sách process...</p>
+          <p>{t("memory.loading_processes")}</p>
         </div>
       </div>
     );

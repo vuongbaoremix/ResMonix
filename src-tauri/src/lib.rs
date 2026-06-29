@@ -27,7 +27,6 @@ pub fn run() {
             commands::open_in_explorer,
             commands::get_largest_files,
             commands::get_process_tree,
-            commands::describe_process,
             commands::kill_process,
             commands::analyze_process,
             commands::lookup_process_online,

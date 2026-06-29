@@ -1,0 +1,677 @@
+{
+  "ui": {
+    "app_title": "ResMonix",
+    "language": "Ngôn ngữ",
+    "memory_tab": "Bộ nhớ",
+    "disk_tab": "Ổ đĩa",
+    "cpu_tab": "CPU",
+    "network_tab": "Mạng",
+    "dashboard_tab": "Tổng quan",
+    "suggestions_tab": "Đề xuất"
+  },
+  "memory": {
+    "physical_memory": "Bộ nhớ Vật lý",
+    "processes": "Tiến trình",
+    "kernel": "Kernel",
+    "paged": "Paged",
+    "non_paged": "NonPaged",
+    "cache_other": "Cache/Khác",
+    "available": "Trống",
+    "commit": "Commit",
+    "optimize_btn": "Tối ưu RAM",
+    "deep_clean_btn": "Deep Clean",
+    "deep_clean_desc": "Giải phóng sâu Kernel Caches (Standby List, Modified Page List). Phù hợp khi hệ thống bị phình to do quá trình quét file hoặc xem video.",
+    "total_memory": "Tổng RAM",
+    "used_memory": "Đã dùng",
+    "free_memory": "Trống",
+    "ram_history": "Lịch sử sử dụng RAM (60s)",
+    "refresh_data": "Làm mới dữ liệu",
+    "stop_auto_refresh": "Dừng tự động làm mới",
+    "start_auto_refresh": "Bật tự động làm mới",
+    "expand_all": "Mở rộng tất cả",
+    "collapse_all": "Thu gọn tất cả",
+    "search_process": "Tìm kiếm process...",
+    "view_tree": "Xem dạng Danh sách (Tree)",
+    "view_treemap": "Xem dạng Bản đồ (Treemap)",
+    "loading_processes": "Đang tải danh sách process...",
+    "kernel_pool": "Kernel Pool",
+    "paged_pool": "Paged Pool",
+    "nonpaged_pool": "NonPaged Pool",
+    "system_cache": "System Cache",
+    "hardware_reserved": "Hardware Reserved",
+    "process_details": "Chi tiết Tiến trình",
+    "kill_process": "Tắt tiến trình",
+    "lookup_online": "Tra cứu Online",
+    "unknown_process": "Tiến trình không xác định",
+    "no_selection": "Chọn một tiến trình để xem chi tiết",
+    "optimize_success": "Thành công! Đã giải phóng {{size}} RAM.",
+    "optimize_done": "Đã tối ưu RAM thành công.",
+    "optimize_error": "Lỗi Tối ưu RAM",
+    "deep_clean_prompt": "Tính năng xả sâu bộ đệm (Deep Clean) sẽ xóa hoàn toàn File Cache và Danh sách chờ (Standby List) của hệ thống để thu hồi tối đa lượng RAM có thể.\n\nHành động này có thể làm giảm nhẹ tốc độ truy xuất ổ cứng trong ít phút đầu sau khi dọn.\n\nTiếp tục chạy Deep Clean?",
+    "deep_clean_warning": "Cảnh báo xả bộ đệm sâu",
+    "deep_clean_success": "Tuyệt vời! Đã thu hồi thành công {{size}} RAM từ hệ thống.",
+    "deep_clean_done": "Đã chạy Deep Clean hoàn tất (không có thêm nhiều RAM được thu hồi).",
+    "deep_clean_error": "Lỗi Deep Clean",
+    "error": "Lỗi: {{msg}}",
+    "auto": "Auto",
+    "turn_off_auto": "Tắt auto-refresh (3s)",
+    "turn_on_auto": "Bật auto-refresh (3s)",
+    "refresh": "Refresh",
+    "deep_cleaning": "Đang xả RAM...",
+    "deep_clean_tooltip": "Deep Clean (Yêu cầu quyền Admin)",
+    "deep_clean_desc_tooltip": "Xả sâu toàn bộ File Cache và Standby List để thu hồi RAM triệt để.",
+    "optimizing": "Đang tối ưu...",
+    "optimize_mode": "Chế độ tối ưu",
+    "basic": "🟢 Cơ bản",
+    "basic_desc": "Dọn dẹp app người dùng",
+    "standard": "🟡 Tiêu chuẩn",
+    "standard_desc": "Dọn dẹp toàn bộ ứng dụng",
+    "max": "🔴 Tối đa (Cần Admin)",
+    "max_desc": "Dọn toàn bộ ứng dụng + File Cache",
+    "cell_size": "Kích thước ô = RAM usage",
+    "loading_data": "Đang tải dữ liệu..."
+  },
+  "dashboard": {
+    "title": "Tổng quan Hệ thống",
+    "subtitle": "Tổng quan tài nguyên hệ thống",
+    "total_disk": "Tổng dung lượng",
+    "used_disk": "Đã sử dụng",
+    "used_ram": "RAM đã dùng",
+    "processes": "Tiến trình",
+    "available_drives": "{{count}} ổ đĩa khả dụng",
+    "free_space": "trống",
+    "loading_drives": "Đang tải danh sách ổ đĩa...",
+    "available": "khả dụng",
+    "loading": "Đang tải...",
+    "top_processes": "Top Tiến trình",
+    "view_details": "Xem chi tiết",
+    "loading_memory": "Đang tải thông tin bộ nhớ...",
+    "select_drive": "Chọn ổ đĩa để bắt đầu phân tích",
+    "used": "đã dùng"
+  },
+  "disk": {
+    "select_drive": "Chọn ổ đĩa...",
+    "stop": "Dừng",
+    "scan": "Quét",
+    "name": "Tên",
+    "percent": "Tỉ lệ",
+    "size": "Kích thước",
+    "physical_size": "Kích thước Vật lý",
+    "items": "Số lượng",
+    "modified": "Ngày sửa",
+    "preparing_scan": "Đang chuẩn bị quét...",
+    "cell_size": "Kích thước ô = Dung lượng file",
+    "scan_to_view": "Quét ổ đĩa để xem bản đồ (Treemap)",
+    "safe": "An toàn",
+    "caution": "Cảnh báo",
+    "dangerous": "Nguy hiểm",
+    "folder": "Thư mục",
+    "file": "Tệp",
+    "action_direct_delete": "Xóa trực tiếp",
+    "action_tool_required": "Cần dùng công cụ",
+    "action_config_change": "Thay đổi cấu hình",
+    "action_reinstallable": "Có thể cài lại",
+    "action_move": "Di chuyển sang ổ khác",
+    "scan_to_suggest": "Quét ổ đĩa để nhận đề xuất",
+    "optimize_space": "tối ưu dung lượng",
+    "optimization_suggestions": "Đề xuất tối ưu",
+    "can_free": "Có thể giải phóng",
+    "paths": "đường dẫn",
+    "and_other_paths": "... và {{count}} đường dẫn khác",
+    "cleanup": "Dọn dẹp",
+    "select_item": "Chọn file hoặc thư mục",
+    "to_view_details": "để xem thông tin chi tiết",
+    "size_label": "Dung lượng",
+    "type_label": "Loại",
+    "num_files": "Số file",
+    "num_dirs": "Số thư mục",
+    "last_modified": "Chỉnh sửa lần cuối",
+    "belongs_to": "Thuộc về:",
+    "importance": "Quan trọng:",
+    "access_denied": "⚠️ Không có quyền truy cập. Chạy ứng dụng với quyền Administrator để xem nội dung.",
+    "open_explorer": "Mở trong Explorer",
+    "delete_recycle": "Xóa (vào Recycle Bin)",
+    "system_file_warning": "🔴 File/thư mục hệ thống quan trọng. Không nên xóa.",
+    "delete_confirm": "Bạn có chắc muốn xóa \"{{name}}\"?\nDung lượng: {{size}}"
+  },
+  "process_detail": {
+    "select_process": "Chọn process",
+    "to_view_details": "để xem thông tin chi tiết",
+    "process_not_exist": "Process không còn tồn tại",
+    "working_set": "Working Set",
+    "ram_percent": "% RAM",
+    "private_bytes": "Private Bytes",
+    "process_type": "Loại Process",
+    "subtree_ws": "Subtree WS",
+    "subtree_private": "Subtree Private",
+    "child_processes": "Process con",
+    "belongs_to": "Thuộc về:",
+    "importance": "Quan trọng:",
+    "analyzing": "Đang phân tích...",
+    "analysis_result": "Kết quả phân tích",
+    "description": "Mô tả",
+    "product": "Sản phẩm",
+    "publisher": "Nhà phát hành",
+    "path": "Đường dẫn",
+    "copyright": "Bản quyền",
+    "signed": "Có thông tin nhà phát hành",
+    "unsigned": "Không có thông tin nhà phát hành",
+    "online_info": "Thông tin Online",
+    "software": "Phần mềm",
+    "developer": "Nhà phát triển",
+    "danger_level": "Mức nguy hiểm:",
+    "source": "Nguồn:",
+    "confirm_kill": "Bạn có chắc muốn tắt \"{{name}}\" (PID: {{pid}})?",
+    "warning_system_process": "⚠️ CẢNH BÁO: Đây là process hệ thống, tắt có thể gây lỗi!",
+    "kill_immediately": "Process sẽ bị tắt ngay lập tức.",
+    "error": "Lỗi:",
+    "system_process_warning": "Process hệ thống quan trọng. Tắt có thể gây lỗi hoặc BSOD.",
+    "kill_process": "Tắt Process"
+  },
+  "process_kb": {
+    "kernel nonpaged pool": {
+      "what": "Kernel NonPaged Pool",
+      "description": "Vùng nhớ của hệ điều hành bị khóa cứng trên RAM. Thường chứa dữ liệu quan trọng của Kernel, driver card đồ họa (GPU), driver mạng không thể swap ra ổ cứng.",
+      "belongs_to": "Windows OS",
+      "importance": "Bắt buộc — Quản lý bởi OS & Driver",
+      "can_kill": false
+    },
+    "kernel paged pool": {
+      "what": "Kernel Paged Pool",
+      "description": "Vùng nhớ của hệ điều hành có thể đẩy ra ổ cứng (Pagefile) khi thiếu RAM. Chứa dữ liệu ít quan trọng hơn của hệ thống và các ứng dụng.",
+      "belongs_to": "Windows OS",
+      "importance": "Bắt buộc — Quản lý bởi OS",
+      "can_kill": false
+    },
+    "hardware drivers / page tables": {
+      "what": "Hardware, Page Tables & Cache",
+      "description": "Dung lượng RAM bị chiếm bởi bảng phân trang (Page Tables) để quản lý bộ nhớ, File System Cache (bộ đệm file), và các driver phần cứng cấp thấp không báo cáo trực tiếp qua Paged/NonPaged pool.",
+      "belongs_to": "Windows OS",
+      "importance": "Bắt buộc — Kiến trúc cốt lõi của Windows",
+      "can_kill": false
+    },
+    "file system (ntfs)": {
+      "what": "NTFS File System Cache",
+      "description": "Bộ đệm lưu trữ cấu trúc thư mục (MFT) và metadata của ổ cứng NTFS. Sẽ phình to khi quét file hoặc copy dữ liệu lớn.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý file",
+      "can_kill": false
+    },
+    "ntfs file system": {
+      "what": "NTFS File System Cache",
+      "description": "Bộ đệm lưu trữ cấu trúc thư mục (MFT) và metadata của ổ cứng NTFS. Sẽ phình to khi quét file hoặc copy dữ liệu lớn.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý file",
+      "can_kill": false
+    },
+    "file objects": {
+      "what": "File Objects",
+      "description": "Cấu trúc dữ liệu đại diện cho các file đang được mở hoặc vừa được đóng bởi các phần mềm.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý I/O",
+      "can_kill": false
+    },
+    "memory manager section": {
+      "what": "Memory Manager Section",
+      "description": "Dùng để ánh xạ file vào bộ nhớ (Memory Mapped Files) và quản lý bộ nhớ chia sẻ.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý bộ nhớ",
+      "can_kill": false
+    },
+    "thread objects": {
+      "what": "Process & Thread Objects",
+      "description": "Cấu trúc dữ liệu lưu thông tin về các tiến trình (Processes) và luồng (Threads) đang chạy.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý tiến trình",
+      "can_kill": false
+    },
+    "process objects": {
+      "what": "Process & Thread Objects",
+      "description": "Cấu trúc dữ liệu lưu thông tin về các tiến trình (Processes) và luồng (Threads) đang chạy.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Quản lý tiến trình",
+      "can_kill": false
+    },
+    "event tracing (etw)": {
+      "what": "Event Tracing (ETW)",
+      "description": "Bộ đệm lưu trữ log hệ thống và các sự kiện chẩn đoán của Windows.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Chẩn đoán",
+      "can_kill": false
+    },
+    "registry config manager": {
+      "what": "Registry Manager",
+      "description": "Bộ đệm lưu trữ các khóa Registry đang được đọc/ghi.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Cấu hình hệ thống",
+      "can_kill": false
+    },
+    "directx graphics kernel": {
+      "what": "Graphics Driver Pool",
+      "description": "Bộ đệm dùng bởi card đồ họa (GPU) để lưu trữ texture, shaders và giao tiếp với phần cứng.",
+      "belongs_to": "Display Driver",
+      "importance": "Xử lý đồ họa",
+      "can_kill": false
+    },
+    "video graphics kernel": {
+      "what": "Graphics Driver Pool",
+      "description": "Bộ đệm dùng bởi card đồ họa (GPU) để lưu trữ texture, shaders và giao tiếp với phần cứng.",
+      "belongs_to": "Display Driver",
+      "importance": "Xử lý đồ họa",
+      "can_kill": false
+    },
+    "ndis network driver": {
+      "what": "Network Drivers & Protocols",
+      "description": "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Kết nối mạng",
+      "can_kill": false
+    },
+    "tcp/ip protocol": {
+      "what": "Network Drivers & Protocols",
+      "description": "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Kết nối mạng",
+      "can_kill": false
+    },
+    "udp protocol": {
+      "what": "Network Drivers & Protocols",
+      "description": "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Kết nối mạng",
+      "can_kill": false
+    },
+    "network system": {
+      "what": "Network Drivers & Protocols",
+      "description": "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Kết nối mạng",
+      "can_kill": false
+    },
+    "ancillary function driver": {
+      "what": "Network Drivers & Protocols",
+      "description": "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Kết nối mạng",
+      "can_kill": false
+    },
+    "security tokens": {
+      "what": "Security Tokens",
+      "description": "Dữ liệu xác thực quyền truy cập của người dùng và các phần mềm.",
+      "belongs_to": "Windows Security",
+      "importance": "Bảo mật",
+      "can_kill": false
+    },
+    "security subsystem": {
+      "what": "Security Tokens",
+      "description": "Dữ liệu xác thực quyền truy cập của người dùng và các phần mềm.",
+      "belongs_to": "Windows Security",
+      "importance": "Bảo mật",
+      "can_kill": false
+    },
+    "system": {
+      "what": "Windows Kernel",
+      "description": "Nhân hệ điều hành Windows, quản lý tất cả tài nguyên phần cứng và phần mềm.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "[system process]": {
+      "what": "Windows Kernel",
+      "description": "Nhân hệ điều hành Windows, quản lý tất cả tài nguyên phần cứng và phần mềm.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "csrss.exe": {
+      "what": "Client/Server Runtime Subsystem",
+      "description": "Process hệ thống cốt lõi, quản lý console windows và thread. Tắt sẽ gây BSOD.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — tắt sẽ gây màn hình xanh",
+      "can_kill": false
+    },
+    "lsass.exe": {
+      "what": "Local Security Authority Subsystem",
+      "description": "Xác thực đăng nhập người dùng, quản lý chính sách bảo mật và token.",
+      "belongs_to": "Windows Security",
+      "importance": "Cực kỳ quan trọng — tắt sẽ buộc đăng xuất/khởi động lại",
+      "can_kill": false
+    },
+    "smss.exe": {
+      "what": "Session Manager Subsystem",
+      "description": "Khởi tạo session Windows, chạy csrss.exe và winlogon.exe cho mỗi session.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "wininit.exe": {
+      "what": "Windows Initialization Process",
+      "description": "Khởi động các service hệ thống cốt lõi (services.exe, lsass.exe).",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "winlogon.exe": {
+      "what": "Windows Logon Process",
+      "description": "Quản lý đăng nhập/đăng xuất, xử lý Ctrl+Alt+Del, khóa màn hình.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — tắt sẽ buộc đăng xuất",
+      "can_kill": false
+    },
+    "services.exe": {
+      "what": "Service Control Manager",
+      "description": "Quản lý tất cả Windows Services. Là parent process của mọi svchost.exe.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "memory compression": {
+      "what": "Memory Compression",
+      "description": "Nén các trang bộ nhớ ít dùng để giải phóng RAM vật lý, giảm nhu cầu dùng page file.",
+      "belongs_to": "Windows Memory Manager",
+      "importance": "Quan trọng — giúp tối ưu RAM, không nên tắt",
+      "can_kill": false
+    },
+    "registry": {
+      "what": "Registry Process",
+      "description": "Quản lý Windows Registry hives trong bộ nhớ.",
+      "belongs_to": "Windows OS",
+      "importance": "Cực kỳ quan trọng — KHÔNG THỂ tắt",
+      "can_kill": false
+    },
+    "svchost.exe": {
+      "what": "Service Host Process",
+      "description": "Process chung chứa nhiều Windows Services. Mỗi instance chạy các service khác nhau (Windows Update, DHCP, Audio...).",
+      "belongs_to": "Windows OS",
+      "importance": "Quan trọng — chứa nhiều service thiết yếu, tắt có thể gây lỗi hệ thống",
+      "can_kill": false
+    },
+    "explorer.exe": {
+      "what": "Windows Explorer",
+      "description": "Desktop shell — quản lý Taskbar, Start Menu, File Explorer. Tắt sẽ mất desktop nhưng có thể khởi động lại.",
+      "belongs_to": "Windows OS",
+      "importance": "Quan trọng nhưng có thể restart — Task Manager > File > Run 'explorer.exe'",
+      "can_kill": true
+    },
+    "dwm.exe": {
+      "what": "Desktop Window Manager",
+      "description": "Render giao diện đồ họa Windows (composition, transparency, animations).",
+      "belongs_to": "Windows OS",
+      "importance": "Quan trọng — tắt sẽ mất hiệu ứng đồ họa",
+      "can_kill": false
+    },
+    "searchindexer.exe": {
+      "what": "Windows Search Indexer",
+      "description": "Lập chỉ mục file để tìm kiếm nhanh trong Start Menu và File Explorer.",
+      "belongs_to": "Windows Search",
+      "importance": "Không thiết yếu — có thể tắt nếu không cần search nhanh",
+      "can_kill": true
+    },
+    "searchhost.exe": {
+      "what": "Windows Search Indexer",
+      "description": "Lập chỉ mục file để tìm kiếm nhanh trong Start Menu và File Explorer.",
+      "belongs_to": "Windows Search",
+      "importance": "Không thiết yếu — có thể tắt nếu không cần search nhanh",
+      "can_kill": true
+    },
+    "spoolsv.exe": {
+      "what": "Print Spooler Service",
+      "description": "Quản lý hàng đợi in. Cần thiết nếu dùng máy in.",
+      "belongs_to": "Windows OS",
+      "importance": "Không thiết yếu nếu không dùng máy in",
+      "can_kill": true
+    },
+    "runtimebroker.exe": {
+      "what": "Runtime Broker",
+      "description": "Quản lý permissions cho ứng dụng UWP/Microsoft Store. Mỗi UWP app có 1 instance.",
+      "belongs_to": "Windows OS",
+      "importance": "Bình thường — tự khởi động lại khi cần",
+      "can_kill": true
+    },
+    "chrome.exe": {
+      "what": "Google Chrome",
+      "description": "Trình duyệt web Google Chrome. Mỗi tab và extension chạy trong process riêng (multi-process architecture).",
+      "belongs_to": "Google LLC",
+      "importance": "Bình thường — có thể tắt, mất các tab đang mở",
+      "can_kill": true
+    },
+    "msedge.exe": {
+      "what": "Microsoft Edge",
+      "description": "Trình duyệt web Microsoft Edge (Chromium-based). Multi-process giống Chrome.",
+      "belongs_to": "Microsoft",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "firefox.exe": {
+      "what": "Mozilla Firefox",
+      "description": "Trình duyệt web Firefox. Dùng multi-process (Electrolysis) cho tabs.",
+      "belongs_to": "Mozilla Foundation",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "brave.exe": {
+      "what": "Brave Browser",
+      "description": "Trình duyệt web Brave (Chromium-based) với tính năng chặn quảng cáo tích hợp.",
+      "belongs_to": "Brave Software",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "code.exe": {
+      "what": "Visual Studio Code",
+      "description": "Trình soạn thảo code VS Code. Multi-process: main, renderer, extension host, terminal.",
+      "belongs_to": "Microsoft",
+      "importance": "Bình thường — có thể tắt, lưu file trước",
+      "can_kill": true
+    },
+    "devenv.exe": {
+      "what": "Visual Studio IDE",
+      "description": "Môi trường phát triển tích hợp Visual Studio. Dùng nhiều RAM cho IntelliSense và build.",
+      "belongs_to": "Microsoft",
+      "importance": "Bình thường — có thể tắt, lưu project trước",
+      "can_kill": true
+    },
+    "node.exe": {
+      "what": "Node.js Runtime",
+      "description": "JavaScript runtime. Thường là dev server, build tool, hoặc backend service.",
+      "belongs_to": "OpenJS Foundation",
+      "importance": "Bình thường — tắt sẽ dừng dev server/script đang chạy",
+      "can_kill": true
+    },
+    "python.exe": {
+      "what": "Python Interpreter",
+      "description": "Chạy script/ứng dụng Python. Có thể là script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Bình thường — tắt sẽ dừng script đang chạy",
+      "can_kill": true
+    },
+    "pythonw.exe": {
+      "what": "Python Interpreter",
+      "description": "Chạy script/ứng dụng Python. Có thể là script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Bình thường — tắt sẽ dừng script đang chạy",
+      "can_kill": true
+    },
+    "python3.exe": {
+      "what": "Python Interpreter",
+      "description": "Chạy script/ứng dụng Python. Có thể là script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Bình thường — tắt sẽ dừng script đang chạy",
+      "can_kill": true
+    },
+    "java.exe": {
+      "what": "Java Virtual Machine",
+      "description": "Chạy ứng dụng Java (IntelliJ IDEA, Minecraft, enterprise apps...).",
+      "belongs_to": "Oracle / OpenJDK",
+      "importance": "Bình thường — tắt sẽ dừng ứng dụng Java đang chạy",
+      "can_kill": true
+    },
+    "javaw.exe": {
+      "what": "Java Virtual Machine",
+      "description": "Chạy ứng dụng Java (IntelliJ IDEA, Minecraft, enterprise apps...).",
+      "belongs_to": "Oracle / OpenJDK",
+      "importance": "Bình thường — tắt sẽ dừng ứng dụng Java đang chạy",
+      "can_kill": true
+    },
+    "cargo.exe": {
+      "what": "Rust Package Manager",
+      "description": "Build tool và package manager cho Rust. Thường đang build/compile project.",
+      "belongs_to": "Rust Project",
+      "importance": "Bình thường — tắt sẽ dừng quá trình build",
+      "can_kill": true
+    },
+    "git.exe": {
+      "what": "Git Version Control",
+      "description": "Hệ thống quản lý phiên bản mã nguồn. Đang thực hiện git operation.",
+      "belongs_to": "Git Project",
+      "importance": "Bình thường — tắt có thể gây corrupt index nếu đang write",
+      "can_kill": true
+    },
+    "vmmem": {
+      "what": "Virtual Machine Memory",
+      "description": "Đại diện bộ nhớ của WSL2/Hyper-V VM. Kích thước = RAM VM đang dùng. Giảm bằng cách tắt WSL: 'wsl --shutdown'.",
+      "belongs_to": "WSL2 / Hyper-V",
+      "importance": "Quan trọng nếu đang dùng WSL — 'wsl --shutdown' để giải phóng RAM",
+      "can_kill": false
+    },
+    "vmmemwsl": {
+      "what": "Virtual Machine Memory",
+      "description": "Đại diện bộ nhớ của WSL2/Hyper-V VM. Kích thước = RAM VM đang dùng. Giảm bằng cách tắt WSL: 'wsl --shutdown'.",
+      "belongs_to": "WSL2 / Hyper-V",
+      "importance": "Quan trọng nếu đang dùng WSL — 'wsl --shutdown' để giải phóng RAM",
+      "can_kill": false
+    },
+    "vmwp.exe": {
+      "what": "Hyper-V VM Worker Process",
+      "description": "Worker process cho mỗi Hyper-V virtual machine đang chạy.",
+      "belongs_to": "Microsoft Hyper-V",
+      "importance": "Quan trọng — tắt sẽ force-stop VM",
+      "can_kill": true
+    },
+    "vmms.exe": {
+      "what": "Hyper-V Virtual Machine Management",
+      "description": "Service quản lý tất cả Hyper-V VMs.",
+      "belongs_to": "Microsoft Hyper-V",
+      "importance": "Quan trọng — cần thiết cho Hyper-V/WSL2",
+      "can_kill": false
+    },
+    "wslhost.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process cho WSL. Quản lý Linux distributions và inter-op với Windows.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Cần thiết cho WSL — 'wsl --shutdown' để tắt đúng cách",
+      "can_kill": true
+    },
+    "wsl.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process cho WSL. Quản lý Linux distributions và inter-op với Windows.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Cần thiết cho WSL — 'wsl --shutdown' để tắt đúng cách",
+      "can_kill": true
+    },
+    "wslservice.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process cho WSL. Quản lý Linux distributions và inter-op với Windows.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Cần thiết cho WSL — 'wsl --shutdown' để tắt đúng cách",
+      "can_kill": true
+    },
+    "com.docker.backend.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Quản lý và chạy containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Cần thiết nếu đang dùng containers — tắt qua Docker Desktop",
+      "can_kill": true
+    },
+    "dockerd.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Quản lý và chạy containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Cần thiết nếu đang dùng containers — tắt qua Docker Desktop",
+      "can_kill": true
+    },
+    "docker.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Quản lý và chạy containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Cần thiết nếu đang dùng containers — tắt qua Docker Desktop",
+      "can_kill": true
+    },
+    "discord.exe": {
+      "what": "Discord",
+      "description": "Ứng dụng chat/voice Discord (Electron-based, multi-process).",
+      "belongs_to": "Discord Inc.",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "spotify.exe": {
+      "what": "Spotify",
+      "description": "Ứng dụng nghe nhạc Spotify.",
+      "belongs_to": "Spotify AB",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "slack.exe": {
+      "what": "Slack",
+      "description": "Ứng dụng nhắn tin Slack cho team (Electron-based).",
+      "belongs_to": "Salesforce / Slack",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "teams.exe": {
+      "what": "Microsoft Teams",
+      "description": "Ứng dụng họp và chat Microsoft Teams.",
+      "belongs_to": "Microsoft",
+      "importance": "Bình thường — có thể tắt khi không họp",
+      "can_kill": true
+    },
+    "ms-teams.exe": {
+      "what": "Microsoft Teams",
+      "description": "Ứng dụng họp và chat Microsoft Teams.",
+      "belongs_to": "Microsoft",
+      "importance": "Bình thường — có thể tắt khi không họp",
+      "can_kill": true
+    },
+    "telegram.exe": {
+      "what": "Telegram Desktop",
+      "description": "Ứng dụng nhắn tin Telegram.",
+      "belongs_to": "Telegram FZ-LLC",
+      "importance": "Bình thường — có thể tắt",
+      "can_kill": true
+    },
+    "steam.exe": {
+      "what": "Steam",
+      "description": "Nền tảng game Steam. steamwebhelper.exe là trình duyệt tích hợp.",
+      "belongs_to": "Valve Corporation",
+      "importance": "Bình thường — có thể tắt khi không chơi game",
+      "can_kill": true
+    },
+    "steamwebhelper.exe": {
+      "what": "Steam",
+      "description": "Nền tảng game Steam. steamwebhelper.exe là trình duyệt tích hợp.",
+      "belongs_to": "Valve Corporation",
+      "importance": "Bình thường — có thể tắt khi không chơi game",
+      "can_kill": true
+    },
+    "msmpeng.exe": {
+      "what": "Windows Defender Antimalware",
+      "description": "Engine quét virus/malware của Windows Defender. Có thể dùng nhiều CPU khi quét.",
+      "belongs_to": "Microsoft Defender",
+      "importance": "Quan trọng — bảo vệ hệ thống khỏi malware",
+      "can_kill": false
+    },
+    "securityhealthservice.exe": {
+      "what": "Windows Security Health Service",
+      "description": "Giám sát tình trạng bảo mật tổng thể của Windows.",
+      "belongs_to": "Windows Security",
+      "importance": "Quan trọng — theo dõi bảo mật hệ thống",
+      "can_kill": false
+    },
+    "kernel_pool_tag": {
+      "what": "Kernel Pool Tag: {{tag}}",
+      "description": "Một thẻ định danh (Pool Tag) cấp thấp của Kernel hoặc Hardware Driver đang xin cấp phát bộ nhớ RAM trực tiếp.",
+      "belongs_to": "Windows Kernel / Drivers",
+      "importance": "Cấu trúc nội bộ",
+      "can_kill": false
+    }
+  }
+}

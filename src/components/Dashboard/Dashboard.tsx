@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useDiskStore } from "@/store/useDiskStore";
 import { useMemoryStore } from "@/store/useMemoryStore";
+import { useTranslation } from "react-i18next";
 import { formatSize, formatNumber } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -32,6 +33,7 @@ function getDriveIcon(driveType: string) {
 }
 
 function DiskSummaryCard() {
+  const { t } = useTranslation();
   const drives = useDiskStore((s) => s.drives);
   const selectDrive = useDiskStore((s) => s.selectDrive);
   const startScan = useDiskStore((s) => s.startScan);
@@ -53,7 +55,7 @@ function DiskSummaryCard() {
           <div>
             <h2 className="text-sm font-semibold">Disk Storage</h2>
             <p className="text-[11px] text-muted-foreground">
-              {drives.length} ổ đĩa khả dụng
+              {t("dashboard.available_drives", { count: drives.length })}
             </p>
           </div>
         </div>
@@ -74,7 +76,7 @@ function DiskSummaryCard() {
                     {drive.label}
                   </span>
                   <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 ml-2">
-                    {formatSize(drive.free_space)} trống
+                    {formatSize(drive.free_space)} {t("dashboard.free_space")}
                   </span>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -113,7 +115,7 @@ function DiskSummaryCard() {
 
           {drives.length === 0 && (
             <div className="text-center text-xs text-muted-foreground py-4">
-              Đang tải danh sách ổ đĩa...
+              {t("dashboard.loading_drives")}
             </div>
           )}
         </div>
@@ -125,6 +127,7 @@ function DiskSummaryCard() {
 // ===== Memory Summary Card =====
 
 function MemorySummaryCard() {
+  const { t } = useTranslation();
   const summary = useMemoryStore((s) => s.memorySummary);
   const processTree = useMemoryStore((s) => s.processTree);
   const fetchProcessTree = useMemoryStore((s) => s.fetchProcessTree);
@@ -167,8 +170,8 @@ function MemorySummaryCard() {
             <h2 className="text-sm font-semibold">Memory</h2>
             <p className="text-[11px] text-muted-foreground">
               {summary
-                ? `${formatSize(summary.available_physical)} khả dụng`
-                : "Đang tải..."}
+                ? `${formatSize(summary.available_physical)} ${t("dashboard.available")}`
+                : t("dashboard.loading")}
             </p>
           </div>
         </div>
@@ -248,7 +251,7 @@ function MemorySummaryCard() {
             {topProcesses.length > 0 && (
               <div>
                 <div className="text-[11px] text-muted-foreground font-medium mb-2">
-                  Top Processes
+                  {t("dashboard.top_processes")}
                 </div>
                 <div className="space-y-1">
                   {topProcesses.map((node) => (
@@ -277,7 +280,7 @@ function MemorySummaryCard() {
               className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1.5 rounded-md hover:bg-muted/50 transition-colors"
               onClick={() => setActiveModule("memory")}
             >
-              Xem chi tiết
+              {t("dashboard.view_details")}
               <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -288,7 +291,7 @@ function MemorySummaryCard() {
                 <div className="absolute inset-0 rounded-full border-2 border-muted" />
                 <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               </div>
-              <p>Đang tải thông tin bộ nhớ...</p>
+              <p>{t("dashboard.loading_memory")}</p>
             </div>
           </div>
         )}
@@ -300,6 +303,7 @@ function MemorySummaryCard() {
 // ===== Quick Stats =====
 
 function QuickStats() {
+  const { t } = useTranslation();
   const drives = useDiskStore((s) => s.drives);
   const summary = useMemoryStore((s) => s.memorySummary);
 
@@ -309,21 +313,21 @@ function QuickStats() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div className="stat-card">
-        <span className="text-[11px] text-muted-foreground">Tổng dung lượng</span>
+        <span className="text-[11px] text-muted-foreground">{t("dashboard.total_disk")}</span>
         <span className="text-lg font-semibold tabular-nums">{formatSize(totalDiskSpace)}</span>
       </div>
       <div className="stat-card">
-        <span className="text-[11px] text-muted-foreground">Đã sử dụng</span>
+        <span className="text-[11px] text-muted-foreground">{t("dashboard.used_disk")}</span>
         <span className="text-lg font-semibold tabular-nums">{formatSize(totalDiskUsed)}</span>
       </div>
       <div className="stat-card">
-        <span className="text-[11px] text-muted-foreground">RAM đã dùng</span>
+        <span className="text-[11px] text-muted-foreground">{t("dashboard.used_ram")}</span>
         <span className="text-lg font-semibold tabular-nums">
           {summary ? formatSize(summary.used_physical) : "—"}
         </span>
       </div>
       <div className="stat-card">
-        <span className="text-[11px] text-muted-foreground">Processes</span>
+        <span className="text-[11px] text-muted-foreground">{t("dashboard.processes")}</span>
         <span className="text-lg font-semibold tabular-nums">
           {summary ? formatNumber(summary.process_count) : "—"}
         </span>
@@ -335,14 +339,15 @@ function QuickStats() {
 // ===== Main Dashboard =====
 
 export function Dashboard() {
+  const { t } = useTranslation();
   return (
     <div className="h-full overflow-auto">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-bold">System Overview</h1>
+          <h1 className="text-xl font-bold">{t("dashboard.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Tổng quan tài nguyên hệ thống
+            {t("dashboard.subtitle")}
           </p>
         </div>
 

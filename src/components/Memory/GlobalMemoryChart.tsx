@@ -1,8 +1,10 @@
 import { useMemoryStore } from "@/store/useMemoryStore";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { formatSize } from "@/lib/format";
 
 export function GlobalMemoryChart() {
+  const { t } = useTranslation();
   const history = useMemoryStore((s) => s.history);
   const summary = useMemoryStore((s) => s.memorySummary);
 
@@ -30,7 +32,7 @@ export function GlobalMemoryChart() {
   return (
     <div className="h-24 w-full border-b bg-card/30 flex flex-col">
       <div className="px-3 pt-2 text-xs font-medium text-muted-foreground flex justify-between items-center z-10 relative">
-        <span>Lịch sử sử dụng RAM (60s)</span>
+        <span>{t("memory.ram_history", "Lịch sử sử dụng RAM (60s)")}</span>
         <span>{formatSize(data[data.length - 1]?.used || 0)} / {formatSize(maxMemory)}</span>
       </div>
       <div className="flex-1 -mt-2">

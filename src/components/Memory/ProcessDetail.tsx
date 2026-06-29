@@ -1,4 +1,5 @@
 import { useMemoryStore } from "@/store/useMemoryStore";
+import { useTranslation } from "react-i18next";
 import { formatSize, formatNumber } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,9 +60,9 @@ function findProcessInTree(
 // ===== Main Component =====
 
 export function ProcessDetail() {
+  const { t } = useTranslation();
   const selectedPid = useMemoryStore((s) => s.selectedPid);
   const processTree = useMemoryStore((s) => s.processTree);
-  const processDescription = useMemoryStore((s) => s.processDescription);
   const processAnalysis = useMemoryStore((s) => s.processAnalysis);
   const isAnalyzing = useMemoryStore((s) => s.isAnalyzing);
   const memorySummary = useMemoryStore((s) => s.memorySummary);
@@ -73,8 +74,8 @@ export function ProcessDetail() {
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
         <div className="text-center space-y-2">
           <Info className="h-8 w-8 mx-auto opacity-20" />
-          <p>Chọn process</p>
-          <p className="text-xs">để xem thông tin chi tiết</p>
+          <p>{t("process_detail.select_process")}</p>
+          <p className="text-xs">{t("process_detail.to_view_details")}</p>
         </div>
       </div>
     );
@@ -84,7 +85,7 @@ export function ProcessDetail() {
   if (!processNode) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
-        <p>Process không còn tồn tại</p>
+        <p>{t("process_detail.process_not_exist")}</p>
       </div>
     );
   }
@@ -96,18 +97,31 @@ export function ProcessDetail() {
   const wsPercent = (process.working_set / totalPhysical) * 100;
   const hasChildren = children.length > 0;
 
+  // Retrieve process description from i18n
+  let processDescription: ProcessDescription | null = null;
+  const processNameLower = process.name.toLowerCase();
+  
+  const kbEntry = t(`process_kb.${processNameLower}`, { returnObjects: true, defaultValue: null });
+  if (kbEntry && typeof kbEntry === "object") {
+    processDescription = kbEntry as unknown as ProcessDescription;
+  } else if (processNameLower.startsWith("tag: ")) {
+    const tag = process.name.substring(5);
+    processDescription = t("process_kb.kernel_pool_tag", { returnObjects: true, tag: tag }) as unknown as ProcessDescription;
+  }
+
   const handleKill = async () => {
     const confirmed = window.confirm(
-      `Bạn có chắc muốn tắt "${process.name}" (PID: ${process.pid})?\n\n` +
+      t("process_detail.confirm_kill", { name: process.name, pid: process.pid }) +
+      "\n\n" +
       (processDescription?.can_kill === false
-        ? "⚠️ CẢNH BÁO: Đây là process hệ thống, tắt có thể gây lỗi!"
-        : "Process sẽ bị tắt ngay lập tức.")
+        ? t("process_detail.warning_system_process")
+        : t("process_detail.kill_immediately"))
     );
     if (confirmed) {
       try {
         await killProcess(process.pid);
       } catch (e) {
-        window.alert(`Lỗi: ${e}`);
+        window.alert(`${t("process_detail.error")} ${e}`);
       }
     }
   };
@@ -150,36 +164,36 @@ export function ProcessDetail() {
         {/* Info grid */}
         <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
           <div>
-            <p className="text-muted-foreground">Working Set</p>
+            <p className="text-muted-foreground">{t("process_detail.working_set")}</p>
             <p className="font-medium">{formatSize(process.working_set)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">% RAM</p>
+            <p className="text-muted-foreground">{t("process_detail.ram_percent")}</p>
             <p className="font-medium">
               {wsPercent >= 0.1 ? wsPercent.toFixed(1) : wsPercent > 0 ? "<0.1" : "0"}%
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Private Bytes</p>
+            <p className="text-muted-foreground">{t("process_detail.private_bytes")}</p>
             <p className="font-medium">{formatSize(process.private_bytes)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Process Type</p>
+            <p className="text-muted-foreground">{t("process_detail.process_type")}</p>
             <p className="font-medium capitalize">{process.process_type}</p>
           </div>
 
           {hasChildren && (
             <>
               <div>
-                <p className="text-muted-foreground">Subtree WS</p>
+                <p className="text-muted-foreground">{t("process_detail.subtree_ws")}</p>
                 <p className="font-medium">{formatSize(subtree_working_set)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Subtree Private</p>
+                <p className="text-muted-foreground">{t("process_detail.subtree_private")}</p>
                 <p className="font-medium">{formatSize(subtree_private_bytes)}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-muted-foreground">Child Processes</p>
+                <p className="text-muted-foreground">{t("process_detail.child_processes")}</p>
                 <p className="font-medium">{formatNumber(children.length)}</p>
               </div>
             </>
@@ -202,13 +216,13 @@ export function ProcessDetail() {
               </p>
               <div className="text-xs space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Thuộc về:</span>
+                  <span className="text-muted-foreground">{t("process_detail.belongs_to")}</span>
                   <span className="font-medium">
                     {processDescription.belongs_to}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Quan trọng:</span>
+                  <span className="text-muted-foreground">{t("process_detail.importance")}</span>
                   <span className="font-medium text-right flex-1 ml-2">
                     {processDescription.importance}
                   </span>
@@ -224,7 +238,7 @@ export function ProcessDetail() {
         {isAnalyzing && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Đang phân tích...
+            {t("process_detail.analyzing")}
           </div>
         )}
 
@@ -233,7 +247,7 @@ export function ProcessDetail() {
           <div className="space-y-2.5">
             <div className="flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium">Kết quả phân tích</span>
+              <span className="text-xs font-medium">{t("process_detail.analysis_result")}</span>
             </div>
 
             <div className="rounded-md bg-muted/50 p-2.5 text-xs space-y-2">
@@ -242,7 +256,7 @@ export function ProcessDetail() {
                 <div className="flex items-start gap-1.5">
                   <Info className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="text-muted-foreground text-[10px]">Mô tả</p>
+                    <p className="text-muted-foreground text-[10px]">{t("process_detail.description")}</p>
                     <p className="font-medium">{processAnalysis.file_description}</p>
                   </div>
                 </div>
@@ -253,7 +267,7 @@ export function ProcessDetail() {
                 <div className="flex items-start gap-1.5">
                   <Building2 className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="text-muted-foreground text-[10px]">Sản phẩm</p>
+                    <p className="text-muted-foreground text-[10px]">{t("process_detail.product")}</p>
                     <p className="font-medium">
                       {processAnalysis.product_name}
                       {processAnalysis.product_version && (
@@ -270,7 +284,7 @@ export function ProcessDetail() {
                 <div className="flex items-start gap-1.5">
                   <Building2 className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="text-muted-foreground text-[10px]">Nhà phát hành</p>
+                    <p className="text-muted-foreground text-[10px]">{t("process_detail.publisher")}</p>
                     <p className="font-medium">{processAnalysis.company_name}</p>
                   </div>
                 </div>
@@ -281,7 +295,7 @@ export function ProcessDetail() {
                 <div className="flex items-start gap-1.5">
                   <FolderOpen className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground" />
                   <div className="min-w-0">
-                    <p className="text-muted-foreground text-[10px]">Đường dẫn</p>
+                    <p className="text-muted-foreground text-[10px]">{t("process_detail.path")}</p>
                     <p className="font-medium break-all text-[10px]">
                       {processAnalysis.exe_path}
                     </p>
@@ -294,7 +308,7 @@ export function ProcessDetail() {
                 <div className="flex items-start gap-1.5">
                   <Copyright className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="text-muted-foreground text-[10px]">Bản quyền</p>
+                    <p className="text-muted-foreground text-[10px]">{t("process_detail.copyright")}</p>
                     <p className="font-medium text-[10px]">{processAnalysis.legal_copyright}</p>
                   </div>
                 </div>
@@ -306,14 +320,14 @@ export function ProcessDetail() {
                   <>
                     <CheckCircle className="h-3 w-3 text-green-500" />
                     <span className="text-green-500 text-[10px] font-medium">
-                      Có thông tin nhà phát hành
+                      {t("process_detail.signed")}
                     </span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-3 w-3 text-yellow-500" />
                     <span className="text-yellow-500 text-[10px] font-medium">
-                      Không có thông tin nhà phát hành
+                      {t("process_detail.unsigned")}
                     </span>
                   </>
                 )}
@@ -336,7 +350,7 @@ export function ProcessDetail() {
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <Globe className="h-3.5 w-3.5 text-blue-400" />
-                <span className="text-xs font-medium">Thông tin Online</span>
+                <span className="text-xs font-medium">{t("process_detail.online_info")}</span>
               </div>
 
               <div className="rounded-md bg-muted/50 p-2.5 text-xs space-y-2.5">
@@ -346,14 +360,14 @@ export function ProcessDetail() {
 
                 {onlineInfo.belongs_to && (
                   <div>
-                    <p className="text-muted-foreground text-[10px] mb-0.5">Phần mềm</p>
+                    <p className="text-muted-foreground text-[10px] mb-0.5">{t("process_detail.software")}</p>
                     <p className="font-medium">{onlineInfo.belongs_to}</p>
                   </div>
                 )}
 
                 {onlineInfo.developer && (
                   <div>
-                    <p className="text-muted-foreground text-[10px] mb-0.5">Nhà phát triển</p>
+                    <p className="text-muted-foreground text-[10px] mb-0.5">{t("process_detail.developer")}</p>
                     <p className="font-medium">{onlineInfo.developer}</p>
                   </div>
                 )}
@@ -362,13 +376,13 @@ export function ProcessDetail() {
                   <div className="flex items-center gap-1.5 pt-1.5 border-t border-border/50">
                     <ShieldAlert className="h-3 w-3 text-yellow-500 shrink-0" />
                     <span className="text-[10px]">
-                      Mức nguy hiểm: <strong>{onlineInfo.danger_rating}</strong>
+                      {t("process_detail.danger_level")} <strong>{onlineInfo.danger_rating}</strong>
                     </span>
                   </div>
                 )}
 
                 <div className="text-[9px] text-muted-foreground/50 pt-1">
-                  Nguồn: file.net
+                  {t("process_detail.source")} file.net
                 </div>
               </div>
             </div>
@@ -387,7 +401,7 @@ export function ProcessDetail() {
             <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive flex items-start gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
-                Process hệ thống quan trọng. Tắt có thể gây lỗi hoặc BSOD.
+                {t("process_detail.system_process_warning")}
               </span>
             </div>
           ) : (
@@ -398,7 +412,7 @@ export function ProcessDetail() {
               onClick={handleKill}
             >
               <Skull className="h-3.5 w-3.5" />
-              Tắt Process
+              {t("process_detail.kill_process")}
             </Button>
           )}
         </div>

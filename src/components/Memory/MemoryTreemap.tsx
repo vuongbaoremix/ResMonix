@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useMemoryStore } from "@/store/useMemoryStore";
 import { formatSize } from "@/lib/format";
 import type { ProcessTreeNode, ProcessType } from "@/types";
@@ -377,6 +378,7 @@ function GroupContainer({
 // ===== Main Memory Treemap =====
 
 export function MemoryTreemap() {
+  const { t } = useTranslation();
   const processTree = useMemoryStore((s) => s.processTree);
   const memorySummary = useMemoryStore((s) => s.memorySummary);
   const selectProcess = useMemoryStore((s) => s.selectProcess);
@@ -399,7 +401,7 @@ export function MemoryTreemap() {
   if (processTree.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-        <p>Đang tải dữ liệu...</p>
+        <p>{t("memory.loading_data")}</p>
       </div>
     );
   }
@@ -410,7 +412,7 @@ export function MemoryTreemap() {
       <div className="flex items-center gap-3 px-2 py-1 border-b text-[10px] text-muted-foreground shrink-0">
         <span className="font-medium text-foreground">Memory Treemap</span>
         <span className="text-muted-foreground/40">|</span>
-        <span>Kích thước ô = RAM usage</span>
+        <span>{t("memory.cell_size")}</span>
         <span className="text-muted-foreground/40">|</span>
         <LegendDot color="oklch(0.35 0.12 250)" label="Normal" />
         <LegendDot color="oklch(0.30 0.04 260)" label="Service" />

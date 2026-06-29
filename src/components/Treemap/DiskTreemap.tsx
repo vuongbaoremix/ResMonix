@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useDiskStore } from "@/store/useDiskStore";
 import { formatSize, formatNumber } from "@/lib/format";
 import type { TreemapNode, NodeType, RiskLevel } from "@/types";
@@ -390,6 +391,7 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 // ===== Main Disk Treemap =====
 
 export function DiskTreemap() {
+  const { t } = useTranslation();
   const { treemapData } = useDiskStore();
   const [breadcrumbs, setBreadcrumbs] = useState<TreemapNode[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -432,7 +434,7 @@ export function DiskTreemap() {
             <div className="absolute inset-0 rounded-full border-2 border-muted" />
             <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
-          <p>Scan a drive to view treemap</p>
+          <p>{t("disk.scan_to_view")}</p>
         </div>
       </div>
     );
@@ -444,13 +446,13 @@ export function DiskTreemap() {
       <div className="flex items-center gap-3 px-2 py-1 border-b text-[10px] text-muted-foreground shrink-0">
         <span className="font-medium text-foreground">Disk Treemap</span>
         <span className="text-muted-foreground/40">|</span>
-        <span>Cell size = disk usage</span>
+        <span>{t("disk.cell_size")}</span>
         <span className="text-muted-foreground/40">|</span>
-        <LegendDot color="oklch(0.33 0.14 145)" label="Safe" />
-        <LegendDot color="oklch(0.38 0.14 75)" label="Caution" />
-        <LegendDot color="oklch(0.35 0.18 25)" label="Dangerous" />
-        <LegendDot color="oklch(0.32 0.12 250)" label="Folder" />
-        <LegendDot color="oklch(0.35 0.10 200)" label="File" />
+        <LegendDot color="oklch(0.33 0.14 145)" label={t("disk.safe")} />
+        <LegendDot color="oklch(0.38 0.14 75)" label={t("disk.caution")} />
+        <LegendDot color="oklch(0.35 0.18 25)" label={t("disk.dangerous")} />
+        <LegendDot color="oklch(0.32 0.12 250)" label={t("disk.folder")} />
+        <LegendDot color="oklch(0.35 0.10 200)" label={t("disk.file")} />
       </div>
 
       {/* Breadcrumbs */}

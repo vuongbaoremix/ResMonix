@@ -1,4 +1,5 @@
 import { useDiskStore } from "@/store/useDiskStore";
+import { useTranslation } from "react-i18next";
 import { formatSize, formatNumber } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,7 @@ import {
 import { ScanSearch, X, List, LayoutGrid } from "lucide-react";
 
 export function DiskToolbar() {
+  const { t } = useTranslation();
   const {
     drives,
     selectedDrive,
@@ -34,11 +36,11 @@ export function DiskToolbar() {
         disabled={isScanning}
       >
         <option value="" disabled>
-          Chọn ổ đĩa...
+          {t("disk.select_drive")}
         </option>
         {drives.map((drive) => (
           <option key={drive.mount_point} value={drive.mount_point}>
-            {drive.label} — {formatSize(drive.free_space)} trống /{" "}
+            {drive.label} — {formatSize(drive.free_space)} {t("dashboard.free_space")} /{" "}
             {formatSize(drive.total_space)}
           </option>
         ))}
@@ -53,7 +55,7 @@ export function DiskToolbar() {
           className="gap-1.5 h-7 text-xs"
         >
           <X className="h-3 w-3" />
-          Dừng
+          {t("disk.stop")}
         </Button>
       ) : (
         <Button
@@ -63,7 +65,7 @@ export function DiskToolbar() {
           className="gap-1.5 h-7 text-xs"
         >
           <ScanSearch className="h-3 w-3" />
-          Quét
+          {t("disk.scan")}
         </Button>
       )}
 
@@ -103,7 +105,7 @@ export function DiskToolbar() {
                 <List className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Tree View</TooltipContent>
+            <TooltipContent>{t("memory.view_tree")}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger>
@@ -116,7 +118,7 @@ export function DiskToolbar() {
                 <LayoutGrid className="h-3 w-3" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Treemap</TooltipContent>
+            <TooltipContent>{t("memory.view_treemap")}</TooltipContent>
           </Tooltip>
         </div>
       )}

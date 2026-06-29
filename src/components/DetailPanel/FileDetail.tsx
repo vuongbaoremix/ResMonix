@@ -1,4 +1,5 @@
 import { useDiskStore } from "@/store/useDiskStore";
+import { useTranslation } from "react-i18next";
 import {
   formatSize,
   formatDate,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 
 export function FileDetail() {
+  const { t } = useTranslation();
   const { selectedNode, fileDescription, openInExplorer, deleteItem } =
     useDiskStore();
 
@@ -30,8 +32,8 @@ export function FileDetail() {
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
         <div className="text-center space-y-2">
           <Info className="h-8 w-8 mx-auto opacity-20" />
-          <p>Chọn file hoặc thư mục</p>
-          <p className="text-xs">để xem thông tin chi tiết</p>
+          <p>{t("disk.select_item")}</p>
+          <p className="text-xs">{t("disk.to_view_details")}</p>
         </div>
       </div>
     );
@@ -76,23 +78,23 @@ export function FileDetail() {
         {/* Info grid */}
         <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
           <div>
-            <p className="text-muted-foreground">Dung lượng</p>
+            <p className="text-muted-foreground">{t("disk.size_label")}</p>
             <p className="font-medium">{formatSize(selectedNode.size)}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Loại</p>
+            <p className="text-muted-foreground">{t("disk.type_label")}</p>
             <p className="font-medium capitalize">{selectedNode.node_type}</p>
           </div>
           {isDir && (
             <>
               <div>
-                <p className="text-muted-foreground">Số file</p>
+                <p className="text-muted-foreground">{t("disk.num_files")}</p>
                 <p className="font-medium">
                   {formatNumber(selectedNode.file_count)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Số thư mục</p>
+                <p className="text-muted-foreground">{t("disk.num_dirs")}</p>
                 <p className="font-medium">
                   {formatNumber(selectedNode.dir_count)}
                 </p>
@@ -100,7 +102,7 @@ export function FileDetail() {
             </>
           )}
           <div className="col-span-2">
-            <p className="text-muted-foreground">Chỉnh sửa lần cuối</p>
+            <p className="text-muted-foreground">{t("disk.last_modified")}</p>
             <p className="font-medium">
               {formatDate(selectedNode.last_modified)}
             </p>
@@ -123,13 +125,13 @@ export function FileDetail() {
               </p>
               <div className="text-xs space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Thuộc về:</span>
+                  <span className="text-muted-foreground">{t("disk.belongs_to")}</span>
                   <span className="font-medium">
                     {fileDescription.belongs_to}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Quan trọng:</span>
+                  <span className="text-muted-foreground">{t("disk.importance")}</span>
                   <span className="font-medium">
                     {fileDescription.importance}
                   </span>
@@ -143,8 +145,7 @@ export function FileDetail() {
           <>
             <Separator />
             <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-              ⚠️ Không có quyền truy cập. Chạy ứng dụng với quyền Administrator
-              để xem nội dung.
+              {t("disk.access_denied")}
             </div>
           </>
         )}
@@ -160,7 +161,7 @@ export function FileDetail() {
             onClick={() => openInExplorer(selectedNode.path)}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Mở trong Explorer
+            {t("disk.open_explorer")}
           </Button>
 
           {selectedNode.risk_level !== "dangerous" && !selectedNode.access_denied && (
@@ -171,7 +172,7 @@ export function FileDetail() {
               onClick={() => {
                 if (
                   window.confirm(
-                    `Bạn có chắc muốn xóa "${selectedNode.name}"?\nDung lượng: ${formatSize(selectedNode.size)}`
+                    t("disk.delete_confirm", { name: selectedNode.name, size: formatSize(selectedNode.size) })
                   )
                 ) {
                   deleteItem(selectedNode.path, false);
@@ -179,13 +180,13 @@ export function FileDetail() {
               }}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Xóa (vào Recycle Bin)
+              {t("disk.delete_recycle")}
             </Button>
           )}
 
           {selectedNode.risk_level === "dangerous" && (
             <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-              🔴 File/thư mục hệ thống quan trọng. Không nên xóa.
+              {t("disk.system_file_warning")}
             </div>
           )}
         </div>

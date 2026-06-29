@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State};
 
 use crate::analyzer::{classifier, suggestions};
-use crate::memory::{self, MemorySummary, OnlineProcessInfo, ProcessAnalysis, ProcessDescription, ProcessTreeNode};
+use crate::memory::{self, MemorySummary, OnlineProcessInfo, ProcessAnalysis, ProcessTreeNode};
 use crate::scanner::tree::{FileNodeSummary, FileTree, TreemapNode, SortField, SortOrder};
 use crate::scanner::walker::{self, CancellationToken, ScanConfig, ScanProgress};
 use crate::utils::drives::{self, DriveInfo};
@@ -323,11 +323,7 @@ pub async fn get_process_tree() -> Result<(MemorySummary, Vec<ProcessTreeNode>),
     .map_err(|e| format!("Failed to get process tree: {}", e))?
 }
 
-/// Get description of a process by name
-#[tauri::command]
-pub fn describe_process(name: String) -> Option<ProcessDescription> {
-    memory::describe_process(&name)
-}
+
 
 /// Kill a process by PID
 #[tauri::command]

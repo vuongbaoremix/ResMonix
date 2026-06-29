@@ -1,0 +1,677 @@
+{
+  "ui": {
+    "app_title": "ResMonix",
+    "language": "Language",
+    "memory_tab": "Memory",
+    "disk_tab": "Disk",
+    "cpu_tab": "CPU",
+    "network_tab": "Network",
+    "dashboard_tab": "Dashboard",
+    "suggestions_tab": "Suggestions"
+  },
+  "memory": {
+    "physical_memory": "Physical Memory",
+    "processes": "Processes",
+    "kernel": "Kernel",
+    "paged": "Paged",
+    "non_paged": "NonPaged",
+    "cache_other": "Cache/Other",
+    "available": "Available",
+    "commit": "Commit",
+    "optimize_btn": "Optimize RAM",
+    "deep_clean_btn": "Deep Clean",
+    "deep_clean_desc": "Deeply purge Kernel Caches (Standby List, Modified Page List). Suitable when the system is bloated due to file scanning or video playback.",
+    "total_memory": "Total RAM",
+    "used_memory": "Used",
+    "free_memory": "Free",
+    "ram_history": "RAM Usage History (60s)",
+    "refresh_data": "Refresh Data",
+    "stop_auto_refresh": "Stop Auto-refresh",
+    "start_auto_refresh": "Start Auto-refresh",
+    "expand_all": "Expand All",
+    "collapse_all": "Collapse All",
+    "search_process": "Search process...",
+    "view_tree": "View as List (Tree)",
+    "view_treemap": "View as Map (Treemap)",
+    "loading_processes": "Loading process list...",
+    "kernel_pool": "Kernel Pool",
+    "paged_pool": "Paged Pool",
+    "nonpaged_pool": "NonPaged Pool",
+    "system_cache": "System Cache",
+    "hardware_reserved": "Hardware Reserved",
+    "process_details": "Process Details",
+    "kill_process": "Kill Process",
+    "lookup_online": "Lookup Online",
+    "unknown_process": "Unknown Process",
+    "no_selection": "Select a process to view details",
+    "optimize_success": "Success! Freed {{size}} of RAM.",
+    "optimize_done": "RAM successfully optimized.",
+    "optimize_error": "RAM Optimization Error",
+    "deep_clean_prompt": "Deep Clean will completely purge the System File Cache and Standby List to reclaim the maximum amount of RAM possible.\n\nThis action may slightly reduce disk read speeds in the first few minutes after cleaning.\n\nContinue with Deep Clean?",
+    "deep_clean_warning": "Deep Clean Warning",
+    "deep_clean_success": "Awesome! Successfully reclaimed {{size}} of RAM from the system.",
+    "deep_clean_done": "Deep Clean completed (no significant additional RAM was reclaimed).",
+    "deep_clean_error": "Deep Clean Error",
+    "error": "Error: {{msg}}",
+    "auto": "Auto",
+    "turn_off_auto": "Turn off auto-refresh (3s)",
+    "turn_on_auto": "Turn on auto-refresh (3s)",
+    "refresh": "Refresh",
+    "deep_cleaning": "Cleaning RAM...",
+    "deep_clean_tooltip": "Deep Clean (Requires Admin)",
+    "deep_clean_desc_tooltip": "Deeply purge all File Cache and Standby List to thoroughly reclaim RAM.",
+    "optimizing": "Optimizing...",
+    "optimize_mode": "Optimization Mode",
+    "basic": "🟢 Basic",
+    "basic_desc": "Clean user apps",
+    "standard": "🟡 Standard",
+    "standard_desc": "Clean all applications",
+    "max": "🔴 Maximum (Requires Admin)",
+    "max_desc": "Clean all applications + File Cache",
+    "cell_size": "Cell size = RAM usage",
+    "loading_data": "Loading data..."
+  },
+  "dashboard": {
+    "title": "System Overview",
+    "subtitle": "System resources overview",
+    "total_disk": "Total Disk Space",
+    "used_disk": "Used Space",
+    "used_ram": "RAM Used",
+    "processes": "Processes",
+    "available_drives": "{{count}} available drives",
+    "free_space": "free",
+    "loading_drives": "Loading drives...",
+    "available": "available",
+    "loading": "Loading...",
+    "top_processes": "Top Processes",
+    "view_details": "View Details",
+    "loading_memory": "Loading memory info...",
+    "select_drive": "Select a drive to start analyzing",
+    "used": "used"
+  },
+  "disk": {
+    "select_drive": "Select drive...",
+    "stop": "Stop",
+    "scan": "Scan",
+    "name": "Name",
+    "percent": "Percent",
+    "size": "Size",
+    "physical_size": "Physical Size",
+    "items": "Items",
+    "modified": "Modified",
+    "preparing_scan": "Preparing scan...",
+    "cell_size": "Cell size = File size",
+    "scan_to_view": "Scan a drive to view treemap",
+    "safe": "Safe",
+    "caution": "Caution",
+    "dangerous": "Dangerous",
+    "folder": "Folder",
+    "file": "File",
+    "action_direct_delete": "Direct Delete",
+    "action_tool_required": "Tool Required",
+    "action_config_change": "Config Change",
+    "action_reinstallable": "Reinstallable",
+    "action_move": "Move to other drive",
+    "scan_to_suggest": "Scan drive to get suggestions",
+    "optimize_space": "to optimize space",
+    "optimization_suggestions": "Optimization Suggestions",
+    "can_free": "Can free",
+    "paths": "paths",
+    "and_other_paths": "... and {{count}} other paths",
+    "cleanup": "Cleanup",
+    "select_item": "Select a file or folder",
+    "to_view_details": "to view detailed information",
+    "size_label": "Size",
+    "type_label": "Type",
+    "num_files": "Files count",
+    "num_dirs": "Folders count",
+    "last_modified": "Last modified",
+    "belongs_to": "Belongs to:",
+    "importance": "Importance:",
+    "access_denied": "⚠️ Access denied. Run as Administrator to view content.",
+    "open_explorer": "Open in Explorer",
+    "delete_recycle": "Delete (to Recycle Bin)",
+    "system_file_warning": "🔴 Important system file/folder. Should not be deleted.",
+    "delete_confirm": "Are you sure you want to delete \"{{name}}\"?\nSize: {{size}}"
+  },
+  "process_detail": {
+    "select_process": "Select a process",
+    "to_view_details": "to view detailed information",
+    "process_not_exist": "Process no longer exists",
+    "working_set": "Working Set",
+    "ram_percent": "% RAM",
+    "private_bytes": "Private Bytes",
+    "process_type": "Process Type",
+    "subtree_ws": "Subtree WS",
+    "subtree_private": "Subtree Private",
+    "child_processes": "Child Processes",
+    "belongs_to": "Belongs to:",
+    "importance": "Importance:",
+    "analyzing": "Analyzing...",
+    "analysis_result": "Analysis Results",
+    "description": "Description",
+    "product": "Product",
+    "publisher": "Publisher",
+    "path": "Path",
+    "copyright": "Copyright",
+    "signed": "Publisher information available",
+    "unsigned": "No publisher information",
+    "online_info": "Online Info",
+    "software": "Software",
+    "developer": "Developer",
+    "danger_level": "Danger Level:",
+    "source": "Source:",
+    "confirm_kill": "Are you sure you want to kill \"{{name}}\" (PID: {{pid}})?",
+    "warning_system_process": "⚠️ WARNING: This is a system process, killing it may cause errors!",
+    "kill_immediately": "The process will be terminated immediately.",
+    "error": "Error:",
+    "system_process_warning": "Critical system process. Terminating may cause errors or BSOD.",
+    "kill_process": "Kill Process"
+  },
+  "process_kb": {
+    "kernel nonpaged pool": {
+      "what": "Kernel NonPaged Pool",
+      "description": "Operating system memory locked in RAM. Typically contains critical Kernel data, GPU drivers, and network drivers that cannot be swapped to disk.",
+      "belongs_to": "Windows OS",
+      "importance": "Critical — Managed by OS & Drivers",
+      "can_kill": false
+    },
+    "kernel paged pool": {
+      "what": "Kernel Paged Pool",
+      "description": "Operating system memory that can be paged to disk (Pagefile) when RAM is low. Contains less critical system and application data.",
+      "belongs_to": "Windows OS",
+      "importance": "Critical — Managed by OS",
+      "can_kill": false
+    },
+    "hardware drivers / page tables": {
+      "what": "Hardware, Page Tables & Cache",
+      "description": "RAM occupied by Page Tables for memory management, File System Cache, and low-level hardware drivers not directly reported via Paged/NonPaged pool.",
+      "belongs_to": "Windows OS",
+      "importance": "Critical — Core Windows Architecture",
+      "can_kill": false
+    },
+    "file system (ntfs)": {
+      "what": "NTFS File System Cache",
+      "description": "Cache storing directory structures (MFT) and NTFS drive metadata. Bloats when scanning files or copying large data.",
+      "belongs_to": "Windows Kernel",
+      "importance": "File Management",
+      "can_kill": false
+    },
+    "ntfs file system": {
+      "what": "NTFS File System Cache",
+      "description": "Cache storing directory structures (MFT) and NTFS drive metadata. Bloats when scanning files or copying large data.",
+      "belongs_to": "Windows Kernel",
+      "importance": "File Management",
+      "can_kill": false
+    },
+    "file objects": {
+      "what": "File Objects",
+      "description": "Data structures representing files currently opened or recently closed by software.",
+      "belongs_to": "Windows Kernel",
+      "importance": "I/O Management",
+      "can_kill": false
+    },
+    "memory manager section": {
+      "what": "Memory Manager Section",
+      "description": "Used to map files into memory (Memory Mapped Files) and manage shared memory.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Memory Management",
+      "can_kill": false
+    },
+    "thread objects": {
+      "what": "Process & Thread Objects",
+      "description": "Data structures storing information about running processes and threads.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Process Management",
+      "can_kill": false
+    },
+    "process objects": {
+      "what": "Process & Thread Objects",
+      "description": "Data structures storing information about running processes and threads.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Process Management",
+      "can_kill": false
+    },
+    "event tracing (etw)": {
+      "what": "Event Tracing (ETW)",
+      "description": "Buffer storing system logs and Windows diagnostic events.",
+      "belongs_to": "Windows Kernel",
+      "importance": "Diagnostics",
+      "can_kill": false
+    },
+    "registry config manager": {
+      "what": "Registry Manager",
+      "description": "Cache storing currently read/written Registry keys.",
+      "belongs_to": "Windows Kernel",
+      "importance": "System Configuration",
+      "can_kill": false
+    },
+    "directx graphics kernel": {
+      "what": "Graphics Driver Pool",
+      "description": "Buffer used by the graphics card (GPU) to store textures, shaders, and interface with hardware.",
+      "belongs_to": "Display Driver",
+      "importance": "Graphics Processing",
+      "can_kill": false
+    },
+    "video graphics kernel": {
+      "what": "Graphics Driver Pool",
+      "description": "Buffer used by the graphics card (GPU) to store textures, shaders, and interface with hardware.",
+      "belongs_to": "Display Driver",
+      "importance": "Graphics Processing",
+      "can_kill": false
+    },
+    "ndis network driver": {
+      "what": "Network Drivers & Protocols",
+      "description": "Network buffer used to receive, send, and process Internet packets (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Networking",
+      "can_kill": false
+    },
+    "tcp/ip protocol": {
+      "what": "Network Drivers & Protocols",
+      "description": "Network buffer used to receive, send, and process Internet packets (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Networking",
+      "can_kill": false
+    },
+    "udp protocol": {
+      "what": "Network Drivers & Protocols",
+      "description": "Network buffer used to receive, send, and process Internet packets (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Networking",
+      "can_kill": false
+    },
+    "network system": {
+      "what": "Network Drivers & Protocols",
+      "description": "Network buffer used to receive, send, and process Internet packets (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Networking",
+      "can_kill": false
+    },
+    "ancillary function driver": {
+      "what": "Network Drivers & Protocols",
+      "description": "Network buffer used to receive, send, and process Internet packets (TCP/UDP).",
+      "belongs_to": "Windows Network",
+      "importance": "Networking",
+      "can_kill": false
+    },
+    "security tokens": {
+      "what": "Security Tokens",
+      "description": "Data verifying access rights for users and software.",
+      "belongs_to": "Windows Security",
+      "importance": "Security",
+      "can_kill": false
+    },
+    "security subsystem": {
+      "what": "Security Tokens",
+      "description": "Data verifying access rights for users and software.",
+      "belongs_to": "Windows Security",
+      "importance": "Security",
+      "can_kill": false
+    },
+    "system": {
+      "what": "Windows Kernel",
+      "description": "The Windows operating system kernel, managing all hardware and software resources.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "[system process]": {
+      "what": "Windows Kernel",
+      "description": "The Windows operating system kernel, managing all hardware and software resources.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "csrss.exe": {
+      "what": "Client/Server Runtime Subsystem",
+      "description": "Core system process managing the windows console and threads. Killing causes BSOD.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — killing causes Blue Screen",
+      "can_kill": false
+    },
+    "lsass.exe": {
+      "what": "Local Security Authority Subsystem",
+      "description": "Authenticates user logins, manages security policies and tokens.",
+      "belongs_to": "Windows Security",
+      "importance": "Extremely Critical — killing forces logout/reboot",
+      "can_kill": false
+    },
+    "smss.exe": {
+      "what": "Session Manager Subsystem",
+      "description": "Initializes Windows sessions, runs csrss.exe and winlogon.exe for each session.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "wininit.exe": {
+      "what": "Windows Initialization Process",
+      "description": "Starts core system services (services.exe, lsass.exe).",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "winlogon.exe": {
+      "what": "Windows Logon Process",
+      "description": "Manages login/logout, handles Ctrl+Alt+Del, locks screen.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — killing forces logout",
+      "can_kill": false
+    },
+    "services.exe": {
+      "what": "Service Control Manager",
+      "description": "Manages all Windows Services. Parent process of all svchost.exe.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "memory compression": {
+      "what": "Memory Compression",
+      "description": "Compresses less frequently used memory pages to free physical RAM, reducing pagefile usage.",
+      "belongs_to": "Windows Memory Manager",
+      "importance": "Important — helps optimize RAM, do not kill",
+      "can_kill": false
+    },
+    "registry": {
+      "what": "Registry Process",
+      "description": "Manages Windows Registry hives in memory.",
+      "belongs_to": "Windows OS",
+      "importance": "Extremely Critical — CANNOT kill",
+      "can_kill": false
+    },
+    "svchost.exe": {
+      "what": "Service Host Process",
+      "description": "Generic process hosting multiple Windows Services. Each instance runs different services (Windows Update, DHCP, Audio...).",
+      "belongs_to": "Windows OS",
+      "importance": "Important — contains essential services, killing may cause system instability",
+      "can_kill": false
+    },
+    "explorer.exe": {
+      "what": "Windows Explorer",
+      "description": "Desktop shell — manages Taskbar, Start Menu, File Explorer. Killing loses desktop but can be restarted.",
+      "belongs_to": "Windows OS",
+      "importance": "Important but restartable — Task Manager > File > Run 'explorer.exe'",
+      "can_kill": true
+    },
+    "dwm.exe": {
+      "what": "Desktop Window Manager",
+      "description": "Renders Windows graphical interface (composition, transparency, animations).",
+      "belongs_to": "Windows OS",
+      "importance": "Important — killing loses graphical effects",
+      "can_kill": false
+    },
+    "searchindexer.exe": {
+      "what": "Windows Search Indexer",
+      "description": "Indexes files for fast searching in Start Menu and File Explorer.",
+      "belongs_to": "Windows Search",
+      "importance": "Non-essential — can be killed if fast search is unneeded",
+      "can_kill": true
+    },
+    "searchhost.exe": {
+      "what": "Windows Search Indexer",
+      "description": "Indexes files for fast searching in Start Menu and File Explorer.",
+      "belongs_to": "Windows Search",
+      "importance": "Non-essential — can be killed if fast search is unneeded",
+      "can_kill": true
+    },
+    "spoolsv.exe": {
+      "what": "Print Spooler Service",
+      "description": "Manages the print queue. Essential if using a printer.",
+      "belongs_to": "Windows OS",
+      "importance": "Non-essential if not using a printer",
+      "can_kill": true
+    },
+    "runtimebroker.exe": {
+      "what": "Runtime Broker",
+      "description": "Manages permissions for UWP/Microsoft Store apps. Each UWP app has 1 instance.",
+      "belongs_to": "Windows OS",
+      "importance": "Normal — restarts automatically when needed",
+      "can_kill": true
+    },
+    "chrome.exe": {
+      "what": "Google Chrome",
+      "description": "Google Chrome web browser. Each tab and extension runs in a separate process (multi-process architecture).",
+      "belongs_to": "Google LLC",
+      "importance": "Normal — can kill, loses open tabs",
+      "can_kill": true
+    },
+    "msedge.exe": {
+      "what": "Microsoft Edge",
+      "description": "Microsoft Edge web browser (Chromium-based). Multi-process like Chrome.",
+      "belongs_to": "Microsoft",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "firefox.exe": {
+      "what": "Mozilla Firefox",
+      "description": "Firefox web browser. Uses multi-process (Electrolysis) for tabs.",
+      "belongs_to": "Mozilla Foundation",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "brave.exe": {
+      "what": "Brave Browser",
+      "description": "Brave web browser (Chromium-based) with built-in ad blocking.",
+      "belongs_to": "Brave Software",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "code.exe": {
+      "what": "Visual Studio Code",
+      "description": "VS Code editor. Multi-process: main, renderer, extension host, terminal.",
+      "belongs_to": "Microsoft",
+      "importance": "Normal — can kill, save files first",
+      "can_kill": true
+    },
+    "devenv.exe": {
+      "what": "Visual Studio IDE",
+      "description": "Visual Studio Integrated Development Environment. Uses heavy RAM for IntelliSense and building.",
+      "belongs_to": "Microsoft",
+      "importance": "Normal — can kill, save project first",
+      "can_kill": true
+    },
+    "node.exe": {
+      "what": "Node.js Runtime",
+      "description": "JavaScript runtime. Typically a dev server, build tool, or backend service.",
+      "belongs_to": "OpenJS Foundation",
+      "importance": "Normal — killing stops running dev server/script",
+      "can_kill": true
+    },
+    "python.exe": {
+      "what": "Python Interpreter",
+      "description": "Runs Python scripts/apps. Could be a script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Normal — killing stops running script",
+      "can_kill": true
+    },
+    "pythonw.exe": {
+      "what": "Python Interpreter",
+      "description": "Runs Python scripts/apps. Could be a script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Normal — killing stops running script",
+      "can_kill": true
+    },
+    "python3.exe": {
+      "what": "Python Interpreter",
+      "description": "Runs Python scripts/apps. Could be a script, web server, ML training...",
+      "belongs_to": "Python Software Foundation",
+      "importance": "Normal — killing stops running script",
+      "can_kill": true
+    },
+    "java.exe": {
+      "what": "Java Virtual Machine",
+      "description": "Runs Java applications (IntelliJ IDEA, Minecraft, enterprise apps...).",
+      "belongs_to": "Oracle / OpenJDK",
+      "importance": "Normal — killing stops running Java app",
+      "can_kill": true
+    },
+    "javaw.exe": {
+      "what": "Java Virtual Machine",
+      "description": "Runs Java applications (IntelliJ IDEA, Minecraft, enterprise apps...).",
+      "belongs_to": "Oracle / OpenJDK",
+      "importance": "Normal — killing stops running Java app",
+      "can_kill": true
+    },
+    "cargo.exe": {
+      "what": "Rust Package Manager",
+      "description": "Build tool and package manager for Rust. Typically building/compiling a project.",
+      "belongs_to": "Rust Project",
+      "importance": "Normal — killing stops build process",
+      "can_kill": true
+    },
+    "git.exe": {
+      "what": "Git Version Control",
+      "description": "Source code version control system. Currently performing a git operation.",
+      "belongs_to": "Git Project",
+      "importance": "Normal — killing may corrupt index if writing",
+      "can_kill": true
+    },
+    "vmmem": {
+      "what": "Virtual Machine Memory",
+      "description": "Memory representation of WSL2/Hyper-V VM. Size = RAM used by VM. Reduce by stopping WSL: 'wsl --shutdown'.",
+      "belongs_to": "WSL2 / Hyper-V",
+      "importance": "Important if using WSL — 'wsl --shutdown' to free RAM",
+      "can_kill": false
+    },
+    "vmmemwsl": {
+      "what": "Virtual Machine Memory",
+      "description": "Memory representation of WSL2/Hyper-V VM. Size = RAM used by VM. Reduce by stopping WSL: 'wsl --shutdown'.",
+      "belongs_to": "WSL2 / Hyper-V",
+      "importance": "Important if using WSL — 'wsl --shutdown' to free RAM",
+      "can_kill": false
+    },
+    "vmwp.exe": {
+      "what": "Hyper-V VM Worker Process",
+      "description": "Worker process for each running Hyper-V virtual machine.",
+      "belongs_to": "Microsoft Hyper-V",
+      "importance": "Important — killing force-stops the VM",
+      "can_kill": true
+    },
+    "vmms.exe": {
+      "what": "Hyper-V Virtual Machine Management",
+      "description": "Service managing all Hyper-V VMs.",
+      "belongs_to": "Microsoft Hyper-V",
+      "importance": "Important — required for Hyper-V/WSL2",
+      "can_kill": false
+    },
+    "wslhost.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process for WSL. Manages Linux distributions and Windows inter-op.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Required for WSL — 'wsl --shutdown' to properly exit",
+      "can_kill": true
+    },
+    "wsl.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process for WSL. Manages Linux distributions and Windows inter-op.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Required for WSL — 'wsl --shutdown' to properly exit",
+      "can_kill": true
+    },
+    "wslservice.exe": {
+      "what": "Windows Subsystem for Linux",
+      "description": "Host process for WSL. Manages Linux distributions and Windows inter-op.",
+      "belongs_to": "Microsoft WSL",
+      "importance": "Required for WSL — 'wsl --shutdown' to properly exit",
+      "can_kill": true
+    },
+    "com.docker.backend.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Manages and runs containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Required if using containers — exit via Docker Desktop",
+      "can_kill": true
+    },
+    "dockerd.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Manages and runs containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Required if using containers — exit via Docker Desktop",
+      "can_kill": true
+    },
+    "docker.exe": {
+      "what": "Docker Engine",
+      "description": "Docker container runtime. Manages and runs containers.",
+      "belongs_to": "Docker Inc.",
+      "importance": "Required if using containers — exit via Docker Desktop",
+      "can_kill": true
+    },
+    "discord.exe": {
+      "what": "Discord",
+      "description": "Discord chat/voice app (Electron-based, multi-process).",
+      "belongs_to": "Discord Inc.",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "spotify.exe": {
+      "what": "Spotify",
+      "description": "Spotify music app.",
+      "belongs_to": "Spotify AB",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "slack.exe": {
+      "what": "Slack",
+      "description": "Slack team messaging app (Electron-based).",
+      "belongs_to": "Salesforce / Slack",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "teams.exe": {
+      "what": "Microsoft Teams",
+      "description": "Microsoft Teams meeting and chat app.",
+      "belongs_to": "Microsoft",
+      "importance": "Normal — can kill when not in a meeting",
+      "can_kill": true
+    },
+    "ms-teams.exe": {
+      "what": "Microsoft Teams",
+      "description": "Microsoft Teams meeting and chat app.",
+      "belongs_to": "Microsoft",
+      "importance": "Normal — can kill when not in a meeting",
+      "can_kill": true
+    },
+    "telegram.exe": {
+      "what": "Telegram Desktop",
+      "description": "Telegram messaging app.",
+      "belongs_to": "Telegram FZ-LLC",
+      "importance": "Normal — can kill",
+      "can_kill": true
+    },
+    "steam.exe": {
+      "what": "Steam",
+      "description": "Steam gaming platform. steamwebhelper.exe is the integrated browser.",
+      "belongs_to": "Valve Corporation",
+      "importance": "Normal — can kill when not gaming",
+      "can_kill": true
+    },
+    "steamwebhelper.exe": {
+      "what": "Steam",
+      "description": "Steam gaming platform. steamwebhelper.exe is the integrated browser.",
+      "belongs_to": "Valve Corporation",
+      "importance": "Normal — can kill when not gaming",
+      "can_kill": true
+    },
+    "msmpeng.exe": {
+      "what": "Windows Defender Antimalware",
+      "description": "Windows Defender virus/malware scanning engine. May use high CPU during scans.",
+      "belongs_to": "Microsoft Defender",
+      "importance": "Critical — protects system from malware",
+      "can_kill": false
+    },
+    "securityhealthservice.exe": {
+      "what": "Windows Security Health Service",
+      "description": "Monitors the overall security health of Windows.",
+      "belongs_to": "Windows Security",
+      "importance": "Critical — monitors system security",
+      "can_kill": false
+    },
+    "kernel_pool_tag": {
+      "what": "Kernel Pool Tag: {{tag}}",
+      "description": "A low-level Pool Tag of the Kernel or Hardware Driver allocating direct RAM memory.",
+      "belongs_to": "Windows Kernel / Drivers",
+      "importance": "Internal Structure",
+      "can_kill": false
+    }
+  }
+}
