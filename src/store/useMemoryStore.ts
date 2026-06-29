@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import type { ProcessTreeNode, MemorySummary, ProcessDescription, ProcessAnalysis, OnlineProcessInfo, MemorySubView, MemoryHistoryPoint } from "@/types";
+import type { ProcessTreeNode, MemorySummary, ProcessAnalysis, OnlineProcessInfo, MemorySubView, MemoryHistoryPoint } from "@/types";
 
 export type SortField = "name" | "pid" | "working_set" | "private_bytes" | "subtree";
 export type SortOrder = "asc" | "desc";
@@ -147,7 +147,7 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
   },
 
   selectProcess: (pid: number | null) => {
-    set({ selectedPid: pid, processDescription: null, processAnalysis: null, onlineInfo: null });
+    set({ selectedPid: pid, processAnalysis: null, onlineInfo: null });
     if (pid !== null) {
       // Find the process name and describe it
       const { processTree } = get();
@@ -164,9 +164,8 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
       // Auto-analyze
       get().analyzeProcess(pid);
       // Auto-lookup online
-      const processName = findProcess(processTree);
-      if (processName) {
-        invoke<OnlineProcessInfo>("lookup_process_online", { name: processName })
+      if (name) {
+        invoke<OnlineProcessInfo>("lookup_process_online", { name })
           .then((info) => set({ onlineInfo: info }))
           .catch(() => set({ onlineInfo: null }));
       }

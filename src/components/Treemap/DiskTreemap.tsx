@@ -414,7 +414,7 @@ export function DiskTreemap() {
     }
   };
 
-  const handleSelect = (node: TreemapNode) => {
+  const handleSelect = (_node: TreemapNode) => {
     // Could sync with tree view selection in the future
   };
 

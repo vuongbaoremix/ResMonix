@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProcessMemoryChart } from "./ProcessMemoryChart";
-import type { ProcessTreeNode, ProcessType } from "@/types";
+import type { ProcessTreeNode, ProcessType, ProcessDescription } from "@/types";
 import {
   Monitor,
   Cog,

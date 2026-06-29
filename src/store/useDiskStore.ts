@@ -318,7 +318,7 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
   },
 
   setSort: (field: DiskSortField) => {
-    const { sortBy, sortOrder, childrenCache, expandedNodes } = get();
+    const { sortBy, sortOrder, expandedNodes } = get();
     const newOrder = sortBy === field && sortOrder === "desc" ? "asc" : "desc";
     set({ sortBy: field, sortOrder: newOrder, childrenCache: new Map() });
 

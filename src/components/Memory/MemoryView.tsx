@@ -330,7 +330,7 @@ function MemoryToolbar() {
 
       {/* Deep Clean Rocket Button */}
       <Tooltip>
-        <TooltipTrigger asChild>
+        <TooltipTrigger>
           <Button
             size="sm"
             onClick={handleDeepClean}

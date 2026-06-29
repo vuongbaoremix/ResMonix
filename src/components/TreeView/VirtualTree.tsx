@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect, memo } from "react";
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDiskStore } from "@/store/useDiskStore";
 import { formatSize, formatDate, formatNumber, getRiskClass } from "@/lib/format";
