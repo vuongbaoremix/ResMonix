@@ -28,8 +28,6 @@ parking_lot = "0.12"
 bytesize = { version = "1", features = ["serde"] }
 log = "0.4"
 env_logger = "0.11"
-jwalk = "0.8.1"
-crossbeam-channel = "0.5.15"
 reqwest = { version = "0.12", features = ["blocking"] }
 
 [dependencies.windows]

@@ -11,6 +11,8 @@ import type {
   FileDescription,
   ActiveModule,
   DiskSubView,
+  DiskSortField,
+  SortOrder,
 } from "@/types";
 
 interface DiskStore {
@@ -31,6 +33,8 @@ interface DiskStore {
   fileDescription: FileDescription | null;
   suggestions: Suggestion[];
   isDarkMode: boolean;
+  sortBy: DiskSortField;
+  sortOrder: SortOrder;
 
   // === Actions ===
   fetchDrives: () => Promise<void>;
@@ -50,6 +54,7 @@ interface DiskStore {
   openInExplorer: (path: string) => Promise<void>;
   getLargestFiles: (count: number) => Promise<FileNodeSummary[]>;
   toggleDarkMode: () => void;
+  setSort: (field: DiskSortField) => void;
   initEventListeners: () => Promise<void>;
 }
 
@@ -70,7 +75,9 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
   treemapRootId: 0,
   fileDescription: null,
   suggestions: [],
-  isDarkMode: true, // Default to dark mode
+  isDarkMode: true,
+  sortBy: "size",
+  sortOrder: "desc",
 
   fetchDrives: async () => {
     try {
@@ -132,24 +139,27 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
   },
 
   toggleNode: async (nodeId: number) => {
-    const { expandedNodes, childrenCache } = get();
-    const newExpanded = new Set(expandedNodes);
-
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-    } else {
-      newExpanded.add(nodeId);
-      // Load children if not cached
-      if (!childrenCache.has(nodeId)) {
-        await get().loadChildren(nodeId);
+    const isExpanding = !get().expandedNodes.has(nodeId);
+    
+    // Update expanded state synchronously to avoid race conditions and provide immediate UI feedback
+    set((state) => {
+      const newExpanded = new Set(state.expandedNodes);
+      if (newExpanded.has(nodeId)) {
+        newExpanded.delete(nodeId);
+      } else {
+        newExpanded.add(nodeId);
       }
-    }
+      return { expandedNodes: newExpanded };
+    });
 
-    set({ expandedNodes: newExpanded });
+    // Load children if we just expanded it and it's not cached
+    if (isExpanding && !get().childrenCache.has(nodeId)) {
+      await get().loadChildren(nodeId);
+    }
   },
 
   refreshVisibleNodes: async () => {
-    const { rootNode, expandedNodes, childrenCache } = get();
+    const { rootNode, expandedNodes } = get();
     if (!rootNode) return;
 
     try {
@@ -158,28 +168,34 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
       set({ rootNode: updatedRoot });
 
       // 2. Fetch the latest children for all expanded nodes
-      // This ensures we pick up newly discovered folders (like ProgramData)
-      let cacheChanged = false;
-      const newCache = new Map(childrenCache);
-
-      // Fetch all children in parallel
+      const { sortBy, sortOrder } = get();
       const fetchPromises = Array.from(expandedNodes).map(async (parentId) => {
         try {
-          const children = await invoke<FileNodeSummary[]>("get_node_children", {
+          const children = await invoke<FileNodeSummary[]>("get_node_children_sorted", {
             nodeId: parentId,
+            sortBy,
+            sortOrder,
           });
-          newCache.set(parentId, children);
-          cacheChanged = true;
+          return { parentId, children };
         } catch (e) {
-          // Parent might no longer exist or error
+          return null;
         }
       });
 
-      await Promise.all(fetchPromises);
+      const results = await Promise.all(fetchPromises);
 
-      if (cacheChanged) {
-        set({ childrenCache: newCache });
-      }
+      // 3. Update cache functionally to prevent overwriting parallel changes
+      set((state) => {
+        const newCache = new Map(state.childrenCache);
+        let changed = false;
+        for (const res of results) {
+          if (res) {
+            newCache.set(res.parentId, res.children);
+            changed = true;
+          }
+        }
+        return changed ? { childrenCache: newCache } : {};
+      });
     } catch (e) {
       console.error("Failed to refresh visible nodes", e);
     }
@@ -187,13 +203,17 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
 
   loadChildren: async (nodeId: number) => {
     try {
-      const children = await invoke<FileNodeSummary[]>("get_node_children", {
+      const { sortBy, sortOrder } = get();
+      const children = await invoke<FileNodeSummary[]>("get_node_children_sorted", {
         nodeId,
+        sortBy,
+        sortOrder,
       });
-      const { childrenCache } = get();
-      const newCache = new Map(childrenCache);
-      newCache.set(nodeId, children);
-      set({ childrenCache: newCache });
+      set((state) => {
+        const newCache = new Map(state.childrenCache);
+        newCache.set(nodeId, children);
+        return { childrenCache: newCache };
+      });
       return children;
     } catch (error) {
       console.error("Failed to load children:", error);
@@ -226,7 +246,7 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
     try {
       const data = await invoke<TreemapNode | null>("get_treemap_data", {
         nodeId,
-        maxDepth: 3,
+        maxDepth: 5,
       });
       set({ treemapData: data, treemapRootId: nodeId });
     } catch (error) {
@@ -297,6 +317,31 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
     document.documentElement.classList.toggle("dark", newMode);
   },
 
+  setSort: (field: DiskSortField) => {
+    const { sortBy, sortOrder, childrenCache, expandedNodes } = get();
+    const newOrder = sortBy === field && sortOrder === "desc" ? "asc" : "desc";
+    set({ sortBy: field, sortOrder: newOrder, childrenCache: new Map() });
+
+    // Reload all expanded nodes with new sort
+    const reloadAll = async () => {
+      const newCache = new Map<number, FileNodeSummary[]>();
+      for (const parentId of expandedNodes) {
+        try {
+          const children = await invoke<FileNodeSummary[]>("get_node_children_sorted", {
+            nodeId: parentId,
+            sortBy: field,
+            sortOrder: newOrder,
+          });
+          newCache.set(parentId, children);
+        } catch {
+          // Skip failed nodes
+        }
+      }
+      set({ childrenCache: newCache });
+    };
+    reloadAll();
+  },
+
   initEventListeners: async () => {
     // Listen for scan progress
     await listen<ScanProgress>("scan:progress", async (event) => {
@@ -334,9 +379,10 @@ export const useDiskStore = create<DiskStore>((set, get) => ({
         set({ rootNode, treemapRootId: rootNode.id });
 
         // Auto-expand root and load its children
+        const { sortBy, sortOrder } = get();
         const children = await invoke<FileNodeSummary[]>(
-          "get_node_children",
-          { nodeId: rootNode.id }
+          "get_node_children_sorted",
+          { nodeId: rootNode.id, sortBy, sortOrder }
         );
         const childrenCache = new Map<number, FileNodeSummary[]>();
         childrenCache.set(rootNode.id, children);

@@ -70,6 +70,24 @@ impl fmt::Display for RiskLevel {
     }
 }
 
+/// Sort field for tree view columns
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SortField {
+    Name,
+    Size,
+    Items,
+    Modified,
+}
+
+/// Sort direction
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
 /// The arena that holds all file nodes.
 /// This is the central data structure for the scanned file tree.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -140,18 +158,101 @@ impl FileTree {
         }
     }
 
+    /// Propagate size and item counts up the tree
+    pub fn propagate_stats(&mut self, mut parent_id: u32, size: u64, is_dir: bool) {
+        let file_diff = if is_dir { 0 } else { 1 };
+        let dir_diff = if is_dir { 1 } else { 0 };
+
+        loop {
+            if let Some(parent) = self.get_mut(parent_id) {
+                parent.size += size;
+                parent.file_count += file_diff;
+                parent.dir_count += dir_diff;
+
+                if let Some(next_parent) = parent.parent_id {
+                    parent_id = next_parent;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
     /// Get all direct children of a node, sorted by size descending
     pub fn get_children_sorted(&self, parent_id: u32) -> Vec<&FileNode> {
+        self.get_children_sorted_by(parent_id, SortField::Size, SortOrder::Desc)
+    }
+
+    /// Get all direct children of a node, sorted by a specified field and order
+    pub fn get_children_sorted_by(
+        &self,
+        parent_id: u32,
+        sort_by: SortField,
+        sort_order: SortOrder,
+    ) -> Vec<&FileNode> {
         if let Some(parent) = self.get(parent_id) {
             let mut children: Vec<&FileNode> = parent
                 .children
                 .iter()
                 .filter_map(|&id| self.get(id))
                 .collect();
-            children.sort_by(|a, b| b.size.cmp(&a.size));
+
+            children.sort_by(|a, b| {
+                // Always prioritize directories over files
+                let a_is_dir = if a.node_type == NodeType::Directory { 0 } else { 1 };
+                let b_is_dir = if b.node_type == NodeType::Directory { 0 } else { 1 };
+                
+                let dir_cmp = a_is_dir.cmp(&b_is_dir);
+                if dir_cmp != std::cmp::Ordering::Equal {
+                    return dir_cmp;
+                }
+
+                let cmp = match sort_by {
+                    SortField::Name => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+                    SortField::Size => a.size.cmp(&b.size),
+                    SortField::Items => {
+                        (a.file_count + a.dir_count).cmp(&(b.file_count + b.dir_count))
+                    }
+                    SortField::Modified => a.last_modified.cmp(&b.last_modified),
+                };
+                match sort_order {
+                    SortOrder::Asc => cmp,
+                    SortOrder::Desc => cmp.reverse(),
+                }
+            });
+
             children
         } else {
             Vec::new()
+        }
+    }
+
+    /// Classify a single node's risk level on demand (deferred classification)
+    pub fn classify_node(&mut self, node_id: u32) {
+        if let Some(node) = self.get(node_id) {
+            if node.risk_level != RiskLevel::Unknown {
+                return; // Already classified
+            }
+            let path = node.path.clone();
+            let node_type = node.node_type;
+            let risk = crate::analyzer::classifier::classify_path(&path, node_type);
+            if let Some(node) = self.get_mut(node_id) {
+                node.risk_level = risk;
+            }
+        }
+    }
+
+    /// Classify a node and all its direct children (for tree view rendering)
+    pub fn classify_children(&mut self, parent_id: u32) {
+        self.classify_node(parent_id);
+        let child_ids: Vec<u32> = self
+            .get(parent_id)
+            .map(|n| n.children.clone())
+            .unwrap_or_default();
+        for child_id in child_ids {
+            self.classify_node(child_id);
         }
     }
 
@@ -189,7 +290,9 @@ impl FileTree {
                     node.file_count = file_count;
                     node.dir_count = dir_count + 1; // Count self
                 }
-                _ => {}
+                _ => {
+                    return node.size;
+                }
             }
         }
 
@@ -239,9 +342,12 @@ impl From<&FileNode> for FileNodeSummary {
 /// Treemap data optimized for frontend visualization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TreemapNode {
+    pub id: u32,
     pub name: String,
     pub path: String,
     pub size: u64,
+    pub file_count: u32,
+    pub dir_count: u32,
     pub node_type: NodeType,
     pub risk_level: RiskLevel,
     pub children: Option<Vec<TreemapNode>>,
@@ -278,12 +384,149 @@ impl FileTree {
         };
 
         Some(TreemapNode {
+            id: node.id,
             name: node.name.clone(),
             path: node.path.clone(),
             size: node.size,
+            file_count: node.file_count,
+            dir_count: node.dir_count,
             node_type: node.node_type,
             risk_level: node.risk_level,
             children,
         })
+    }
+
+    /// Generate flat treemap data (top N largest files only)
+    pub fn to_treemap_flat(&self, node_id: u32, limit: usize) -> Option<TreemapNode> {
+        let root_node = self.get(node_id)?;
+        let mut heap = std::collections::BinaryHeap::with_capacity(limit + 1);
+        
+        let mut stack = vec![node_id];
+        
+        while let Some(current_id) = stack.pop() {
+            if let Some(node) = self.get(current_id) {
+                if node.node_type == NodeType::File {
+                    heap.push(std::cmp::Reverse((node.size, node.id)));
+                    if heap.len() > limit {
+                        heap.pop();
+                    }
+                } else if node.node_type == NodeType::Directory {
+                    for &child_id in &node.children {
+                        stack.push(child_id);
+                    }
+                }
+            }
+        }
+        
+        let mut top_files = Vec::new();
+        while let Some(std::cmp::Reverse((_, id))) = heap.pop() {
+            if let Some(node) = self.get(id) {
+                top_files.push(TreemapNode {
+                    id: node.id,
+                    name: node.name.clone(),
+                    path: node.path.clone(),
+                    size: node.size,
+                    file_count: node.file_count,
+                    dir_count: node.dir_count,
+                    node_type: node.node_type,
+                    risk_level: node.risk_level,
+                    children: None,
+                });
+            }
+        }
+        
+        // Reverse because min-heap popping gives smallest first
+        top_files.reverse();
+
+        Some(TreemapNode {
+            id: root_node.id,
+            name: root_node.name.clone(),
+            path: root_node.path.clone(),
+            size: root_node.size,
+            file_count: root_node.file_count,
+            dir_count: root_node.dir_count,
+            node_type: root_node.node_type,
+            risk_level: root_node.risk_level,
+            children: if top_files.is_empty() { None } else { Some(top_files) },
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_sizes_with_symlink() {
+        let mut tree = FileTree::new();
+        
+        // Root directory
+        let root = FileNode {
+            id: 0,
+            parent_id: None,
+            name: "root".to_string(),
+            path: "C:\\root".to_string(),
+            size: 0,
+            file_count: 0,
+            dir_count: 0,
+            node_type: NodeType::Directory,
+            last_modified: 0,
+            children: Vec::new(),
+            risk_level: RiskLevel::Unknown,
+            is_expanded: false,
+            access_denied: false,
+        };
+        let root_id = tree.add_node(root);
+        tree.root_id = root_id;
+
+        // Normal file (100 bytes)
+        let file = FileNode {
+            id: 0,
+            parent_id: Some(root_id),
+            name: "file.txt".to_string(),
+            path: "C:\\root\\file.txt".to_string(),
+            size: 100,
+            file_count: 0,
+            dir_count: 0,
+            node_type: NodeType::File,
+            last_modified: 0,
+            children: Vec::new(),
+            risk_level: RiskLevel::Unknown,
+            is_expanded: false,
+            access_denied: false,
+        };
+        let file_id = tree.add_node(file);
+        tree.add_child(root_id, file_id);
+
+        // Symlink node (50 bytes)
+        let symlink = FileNode {
+            id: 0,
+            parent_id: Some(root_id),
+            name: "link.lnk".to_string(),
+            path: "C:\\root\\link.lnk".to_string(),
+            size: 50,
+            file_count: 0,
+            dir_count: 0,
+            node_type: NodeType::Symlink,
+            last_modified: 0,
+            children: Vec::new(),
+            risk_level: RiskLevel::Unknown,
+            is_expanded: false,
+            access_denied: false,
+        };
+        let symlink_id = tree.add_node(symlink);
+        tree.add_child(root_id, symlink_id);
+
+        // Run calculation
+        let calculated_size = tree.calculate_sizes(root_id);
+
+        // Assert size is 150 (file size 100 + symlink size 50)
+        assert_eq!(calculated_size, 150);
+        
+        let root_node = tree.get(root_id).unwrap();
+        assert_eq!(root_node.size, 150);
+        assert_eq!(root_node.file_count, 1);
+        // dir_count counts root itself
+        assert_eq!(root_node.dir_count, 1);
     }
 }

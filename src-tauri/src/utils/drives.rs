@@ -145,3 +145,25 @@ fn get_drive_info(mount_point: &str) -> Option<DriveInfo> {
 fn get_drive_info(_mount_point: &str) -> Option<DriveInfo> {
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_print_drives() {
+        let drives = get_drives();
+        for drive in &drives {
+            println!(
+                "Drive: {} | Label: {} | FileSystem: {} | Type: {} | Total: {} GB | Free: {} GB",
+                drive.mount_point,
+                drive.label,
+                drive.file_system,
+                drive.drive_type,
+                drive.total_space as f64 / 1_073_741_824.0,
+                drive.free_space as f64 / 1_073_741_824.0
+            );
+        }
+        assert!(!drives.is_empty(), "No drives found!");
+    }
+}

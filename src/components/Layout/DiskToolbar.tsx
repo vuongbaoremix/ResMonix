@@ -69,7 +69,7 @@ export function DiskToolbar() {
 
       {/* Scan progress */}
       {isScanning && scanProgress && (
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground scan-pulse max-w-sm truncate">
+        <div className="flex-1 min-w-0 flex items-center gap-2 text-[11px] text-muted-foreground scan-pulse pr-4">
           <span className="shrink-0">
             {formatNumber(scanProgress.scanned_files)} files
           </span>
@@ -87,7 +87,7 @@ export function DiskToolbar() {
         </div>
       )}
 
-      <div className="flex-1" />
+      {!(isScanning && scanProgress) && <div className="flex-1" />}
 
       {/* Sub-view tabs (Tree / Treemap) — only show after scan */}
       {showSubViewTabs && (

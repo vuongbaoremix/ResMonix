@@ -20,9 +20,12 @@ export interface FileNodeSummary {
 }
 
 export interface TreemapNode {
+  id: number;
   name: string;
   path: string;
   size: number;
+  file_count: number;
+  dir_count: number;
   node_type: NodeType;
   risk_level: RiskLevel;
   children?: TreemapNode[];
@@ -162,6 +165,8 @@ export interface OnlineProcessInfo {
 export type ActiveModule = "dashboard" | "disk" | "memory" | "suggestions";
 export type DiskSubView = "tree" | "treemap";
 export type MemorySubView = "tree" | "treemap";
+export type DiskSortField = "name" | "size" | "items" | "modified";
+export type SortOrder = "asc" | "desc";
 
 export interface AppState {
   // Drives

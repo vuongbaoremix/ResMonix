@@ -18,6 +18,7 @@ pub fn run() {
             commands::scan_directory,
             commands::cancel_scan,
             commands::get_node_children,
+            commands::get_node_children_sorted,
             commands::get_root_node,
             commands::get_treemap_data,
             commands::describe_path,

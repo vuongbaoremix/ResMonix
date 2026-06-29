@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useEffect, memo } from "react";
 import { useDiskStore } from "@/store/useDiskStore";
 import { formatSize, formatDate, formatNumber, getRiskClass } from "@/lib/format";
-import type { FileNodeSummary } from "@/types";
+import type { FileNodeSummary, DiskSortField } from "@/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Folder,
@@ -20,7 +20,39 @@ interface FlatNode {
   parentSize: number;
 }
 
-function TreeNode({
+// ===== Sort Header Component =====
+
+function SortHeader({
+  field,
+  label,
+  className,
+}: {
+  field: DiskSortField;
+  label: string;
+  className?: string;
+}) {
+  const sortBy = useDiskStore((s) => s.sortBy);
+  const sortOrder = useDiskStore((s) => s.sortOrder);
+  const setSort = useDiskStore((s) => s.setSort);
+
+  return (
+    <div
+      className={`cursor-pointer hover:text-foreground transition-colors select-none ${className ?? ""} ${sortBy === field ? "text-foreground" : ""}`}
+      onClick={() => setSort(field)}
+    >
+      {label}
+      {sortBy === field && (
+        <span className="ml-0.5 text-[9px]">
+          {sortOrder === "desc" ? "▼" : "▲"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ===== Tree Node Row =====
+
+const TreeNode = React.memo(function TreeNode({
   flatNode,
   style,
 }: {
@@ -28,7 +60,7 @@ function TreeNode({
   style: React.CSSProperties;
 }) {
   const { node, depth, parentSize } = flatNode;
-  
+
   const toggleNode = useDiskStore((state) => state.toggleNode);
   const selectNode = useDiskStore((state) => state.selectNode);
   const isExpanded = useDiskStore((state) => state.expandedNodes.has(node.id));
@@ -43,27 +75,27 @@ function TreeNode({
 
   const isScanningThisNode = useDiskStore((state) => {
     if (!state.isScanning || !isDir || !state.scanProgress?.active_dirs) return false;
-    
+
     const activeDirs = state.scanProgress.active_dirs;
-    
+
     for (const currentDir of activeDirs) {
       if (currentDir === node.path) return true;
-      
-      const normalizedPath = node.path.endsWith("\\") || node.path.endsWith("/") 
-        ? node.path 
+
+      const normalizedPath = node.path.endsWith("\\") || node.path.endsWith("/")
+        ? node.path
         : node.path + "\\";
-        
+
       const normalizedPathForward = node.path.endsWith("\\") || node.path.endsWith("/")
         ? node.path
         : node.path + "/";
 
       const currentLower = currentDir.toLowerCase();
-      if (currentLower.startsWith(normalizedPath.toLowerCase()) || 
+      if (currentLower.startsWith(normalizedPath.toLowerCase()) ||
           currentLower.startsWith(normalizedPathForward.toLowerCase())) {
         return true;
       }
     }
-    
+
     return false;
   });
 
@@ -175,7 +207,17 @@ function TreeNode({
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.flatNode === nextProps.flatNode &&
+    prevProps.style.transform === nextProps.style.transform &&
+    prevProps.style.height === nextProps.style.height
+  );
+});
+
+TreeNode.displayName = "TreeNode";
+
+// ===== Main Virtual Tree =====
 
 export function VirtualTree() {
   const rootNode = useDiskStore((state) => state.rootNode);
@@ -186,21 +228,21 @@ export function VirtualTree() {
 
   useEffect(() => {
     if (!isScanning) return;
-    
+
     // Refresh visible nodes every 500ms during scan
     const interval = setInterval(() => {
       refreshVisibleNodes();
     }, 500);
-    
+
     return () => clearInterval(interval);
   }, [isScanning, refreshVisibleNodes]);
 
   // Flatten the tree for virtualization
   const flattenedData = useMemo(() => {
     if (!rootNode) return [];
-    
+
     const result: FlatNode[] = [];
-    
+
     const flatten = (node: FileNodeSummary, depth: number, parentSize: number) => {
       result.push({ node, depth, parentSize });
       if (expandedNodes.has(node.id)) {
@@ -210,17 +252,17 @@ export function VirtualTree() {
         }
       }
     };
-    
+
     flatten(rootNode, 0, rootNode.size);
     return result;
   }, [rootNode, expandedNodes, childrenCache]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   const rowVirtualizer = useVirtualizer({
     count: flattenedData.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 28, // Height of our row (approx 28px)
+    estimateSize: () => 28,
     overscan: 10,
   });
 
@@ -232,7 +274,7 @@ export function VirtualTree() {
             <div className="absolute inset-0 rounded-full border-2 border-muted" />
             <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
-          <p>Đang chuẩn bị quét...</p>
+          <p>Preparing scan...</p>
         </div>
       </div>
     );
@@ -240,19 +282,31 @@ export function VirtualTree() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header Row */}
+      {/* Header Row — Sortable columns */}
       <div className="flex items-center gap-2 py-1.5 px-2 border-b text-xs font-semibold text-muted-foreground bg-muted/30 sticky top-0 z-10 shrink-0 pr-4">
-        <div className="flex-1 min-w-0 pl-6">Name</div>
-        <div className="w-[100px] shrink-0 text-right">Percent</div>
-        <div className="w-20 shrink-0 text-right">Size</div>
-        <div className="w-20 shrink-0 text-right hidden lg:block">Physical Size</div>
-        <div className="w-16 shrink-0 text-right">Items</div>
-        <div className="w-28 shrink-0 text-right hidden md:block">Modified</div>
+        <div className="flex-1 min-w-0 pl-6">
+          <SortHeader field="name" label="Name" />
+        </div>
+        <div className="w-[100px] shrink-0 text-right">
+          <SortHeader field="size" label="Percent" className="text-right" />
+        </div>
+        <div className="w-20 shrink-0 text-right">
+          <SortHeader field="size" label="Size" className="text-right" />
+        </div>
+        <div className="w-20 shrink-0 text-right hidden lg:block">
+          Physical Size
+        </div>
+        <div className="w-16 shrink-0 text-right">
+          <SortHeader field="items" label="Items" className="text-right" />
+        </div>
+        <div className="w-28 shrink-0 text-right hidden md:block">
+          <SortHeader field="modified" label="Modified" className="text-right" />
+        </div>
       </div>
-      
+
       {/* Virtualized Tree Content */}
-      <div 
-        ref={scrollRef} 
+      <div
+        ref={scrollRef}
         className="flex-1 overflow-auto"
       >
         <div

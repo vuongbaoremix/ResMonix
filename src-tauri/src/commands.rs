@@ -4,7 +4,7 @@ use tauri::{Emitter, State};
 
 use crate::analyzer::{classifier, suggestions};
 use crate::memory::{self, MemorySummary, OnlineProcessInfo, ProcessAnalysis, ProcessDescription, ProcessTreeNode};
-use crate::scanner::tree::{FileNodeSummary, FileTree, TreemapNode};
+use crate::scanner::tree::{FileNodeSummary, FileTree, TreemapNode, SortField, SortOrder};
 use crate::scanner::walker::{self, CancellationToken, ScanConfig, ScanProgress};
 use crate::utils::drives::{self, DriveInfo};
 
@@ -106,10 +106,44 @@ pub fn get_node_children(
     state: State<'_, AppState>,
     node_id: u32,
 ) -> Result<Vec<FileNodeSummary>, String> {
-    let tree_lock = state.tree.read();
-    let tree = tree_lock.as_ref().ok_or("No scan data available")?;
+    let mut tree_lock = state.tree.write();
+    let tree = tree_lock.as_mut().ok_or("No scan data available")?;
+
+    // Classify children on demand (deferred from scan)
+    tree.classify_children(node_id);
 
     let children = tree.get_children_sorted(node_id);
+    Ok(children.iter().map(|n| FileNodeSummary::from(*n)).collect())
+}
+
+/// Get children of a node with custom sort field and order
+#[tauri::command]
+pub fn get_node_children_sorted(
+    state: State<'_, AppState>,
+    node_id: u32,
+    sort_by: String,
+    sort_order: String,
+) -> Result<Vec<FileNodeSummary>, String> {
+    let mut tree_lock = state.tree.write();
+    let tree = tree_lock.as_mut().ok_or("No scan data available")?;
+
+    // Classify children on demand
+    tree.classify_children(node_id);
+
+    let field = match sort_by.as_str() {
+        "name" => SortField::Name,
+        "size" => SortField::Size,
+        "items" => SortField::Items,
+        "modified" => SortField::Modified,
+        _ => SortField::Size,
+    };
+    let order = match sort_order.as_str() {
+        "asc" => SortOrder::Asc,
+        "desc" => SortOrder::Desc,
+        _ => SortOrder::Desc,
+    };
+
+    let children = tree.get_children_sorted_by(node_id, field, order);
     Ok(children.iter().map(|n| FileNodeSummary::from(*n)).collect())
 }
 
@@ -152,7 +186,7 @@ pub fn get_treemap_data(
     let tree_lock = state.tree.read();
     let tree = tree_lock.as_ref().ok_or("No scan data available")?;
 
-    Ok(tree.to_treemap(node_id, max_depth, 0.005)) // Min 0.5% of parent size
+    Ok(tree.to_treemap_flat(node_id, 250)) // Return top 250 largest files
 }
 
 /// Get file/directory description

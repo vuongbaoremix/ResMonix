@@ -1,15 +1,10 @@
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::{Instant, UNIX_EPOCH};
-use crossbeam_channel::{unbounded, Sender};
-use rayon::prelude::*;
+use std::collections::VecDeque;
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{mpsc, Arc, Mutex};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use crate::scanner::tree::{FileNode, FileTree, NodeType, RiskLevel};
-use crate::analyzer::classifier;
-
-#[cfg(windows)]
-use std::os::windows::fs::MetadataExt;
 
 /// Progress information emitted during scanning
 #[derive(Debug, Clone, serde::Serialize)]
@@ -61,143 +56,76 @@ impl CancellationToken {
     }
 }
 
-pub enum ScanEvent {
-    DirStart(String),
-    DirEnd(String),
-    Entry {
-        path: String,
-        parent_path: String,
-        name: String,
-        is_dir: bool,
-        size: u64,
-        last_modified: i64,
-        node_type: NodeType,
-        risk_level: RiskLevel,
-        access_denied: bool,
-    },
+/// Lightweight entry collected by worker threads
+struct ScannedEntry {
+    path: String,
+    parent_path: String,
+    name: String,
+    is_dir: bool,
+    is_reparse: bool,
+    size: u64,
+    last_modified: i64,
+    node_type: NodeType,
+    access_denied: bool,
 }
 
-fn scan_dir_recursive(
-    dir_path: PathBuf,
-    tx: &Sender<ScanEvent>,
-    config: &ScanConfig,
-    cancel: &CancellationToken,
-    current_depth: usize,
-) {
-    if cancel.is_cancelled() || (config.max_depth > 0 && current_depth >= config.max_depth) {
-        return;
-    }
-
-    let dir_path_str = dir_path.to_string_lossy().to_string();
-    let _ = tx.send(ScanEvent::DirStart(dir_path_str.clone()));
-
-    let mut sub_dirs = Vec::new();
-
-    match std::fs::read_dir(&dir_path) {
-        Ok(entries) => {
-            for entry_res in entries {
-                if cancel.is_cancelled() {
-                    break;
-                }
-                
-                let entry = match entry_res {
-                    Ok(e) => e,
-                    Err(_) => continue,
-                };
-                
-                let file_name_os = entry.file_name();
-                let file_name = file_name_os.to_string_lossy();
-                
-                if !config.include_hidden && file_name.starts_with('.') {
-                    continue;
-                }
-
-                let path = entry.path();
-                let path_str = path.to_string_lossy().to_string();
-                
-                let metadata = if config.follow_symlinks {
-                    std::fs::metadata(&path)
-                } else {
-                    std::fs::symlink_metadata(&path)
-                };
-                
-                let (is_dir, size, last_modified, is_symlink) = match metadata {
-                    Ok(ref m) => {
-                        let is_d = m.is_dir();
-                        let s = if is_d { 0 } else { m.len() };
-                        let lm = m.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_secs() as i64).unwrap_or(0);
-                        let is_sym = m.file_type().is_symlink();
-                        (is_d, s, lm, is_sym)
-                    },
-                    Err(_) => {
-                        // Access denied or unreadable
-                        let _ = tx.send(ScanEvent::Entry {
-                            path: path_str,
-                            parent_path: dir_path_str.clone(),
-                            name: file_name.to_string(),
-                            is_dir: false, // fallback
-                            size: 0,
-                            last_modified: 0,
-                            node_type: NodeType::File,
-                            risk_level: RiskLevel::Unknown,
-                            access_denied: true,
-                        });
-                        continue;
-                    }
-                };
-                
-                let node_type = if is_symlink {
-                    NodeType::Symlink
-                } else if is_dir {
-                    NodeType::Directory
-                } else {
-                    NodeType::File
-                };
-                
-                let risk_level = classifier::classify_path(&path_str, node_type.clone());
-                
-                let _ = tx.send(ScanEvent::Entry {
-                    path: path_str.clone(),
-                    parent_path: dir_path_str.clone(),
-                    name: file_name.to_string(),
-                    is_dir,
-                    size,
-                    last_modified,
-                    node_type,
-                    risk_level,
-                    access_denied: false,
-                });
-                
-                let is_reparse = {
-                    #[cfg(windows)]
-                    {
-                        metadata.as_ref().map(|m| (m.file_attributes() & 0x400) != 0).unwrap_or(false)
-                    }
-                    #[cfg(not(windows))]
-                    {
-                        false
-                    }
-                };
-
-                if is_dir && (!is_symlink && !is_reparse || config.follow_symlinks) {
-                    sub_dirs.push(path);
-                }
-            }
-        }
-        Err(_) => {
-            // Parent already handles this node, but we could mark it access denied if we wanted
-        }
-    }
-    
-    // Spawn threads for sub-directories
-    sub_dirs.into_par_iter().for_each(|d| {
-        scan_dir_recursive(d, tx, config, cancel, current_depth + 1);
-    });
-
-    let _ = tx.send(ScanEvent::DirEnd(dir_path_str));
+/// Directory waiting to be scanned by a worker thread
+struct DirJob {
+    path: String,
+    depth: usize,
 }
 
-/// Scans a directory and updates the tree state
+/// Number of parallel worker threads for read_dir calls
+const NUM_WORKERS: usize = 4;
+
+/// Batch size for inserting entries into the tree
+const BATCH_SIZE: usize = 4_000;
+
+/// How long to sleep after releasing the write lock (ms)
+const YIELD_MS: u64 = 3;
+
+/// Maximum time (ms) to collect entries before a forced flush + yield
+const MAX_COLLECT_MS: u128 = 100;
+
+/// Check if metadata indicates a reparse point (junction/symlink) on Windows.
+#[cfg(target_os = "windows")]
+fn is_reparse_from_metadata(meta: &std::fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    meta.file_attributes() & 0x400 != 0
+}
+
+#[cfg(not(target_os = "windows"))]
+fn is_reparse_from_metadata(_meta: &std::fs::Metadata) -> bool {
+    false
+}
+
+#[cfg(target_os = "windows")]
+#[allow(dead_code)]
+fn is_reparse_point(path: &Path) -> bool {
+    match std::fs::symlink_metadata(path) {
+        Ok(m) => is_reparse_from_metadata(&m),
+        Err(_) => false,
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(dead_code)]
+fn is_reparse_point(_path: &Path) -> bool {
+    false
+}
+
+/// Scans a directory using parallel BFS (breadth-first search).
+///
+/// Architecture:
+/// - A shared FIFO queue holds directories to scan (BFS order)
+/// - N worker threads pull directories from the queue, call read_dir,
+///   and send discovered entries through a channel
+/// - Child directories are pushed to the BACK of the queue (BFS)
+/// - Main thread receives entries, batches them, and flushes to the tree
+///
+/// BFS ensures parent directories are populated before their children,
+/// so the user sees the folder structure build up level-by-level instead
+/// of waiting for a single deep subtree to finish.
 pub fn scan_directory(
     root_path: &str,
     config: &ScanConfig,
@@ -210,10 +138,7 @@ pub fn scan_directory(
         return;
     }
 
-    let scanned_count = Arc::new(AtomicU64::new(0));
-    let total_size = Arc::new(AtomicU64::new(0));
-
-    // Initialize the root node
+    // Initialize root node
     let root_node = FileNode {
         id: 0,
         parent_id: None,
@@ -244,154 +169,361 @@ pub fn scan_directory(
         }
     };
 
-    let (tx, rx) = unbounded();
-
-    // Spawn producer threads via rayon on a separate native thread to avoid blocking main thread event loop
-    let root_buf = root.to_path_buf();
-    let tx_clone = tx.clone();
-    let config_clone = config.clone();
-    let cancel_clone = cancel_token.clone();
-    
-    std::thread::spawn(move || {
-        scan_dir_recursive(root_buf, &tx_clone, &config_clone, &cancel_clone, 0);
+    // BFS queue: directories waiting to be scanned (FIFO)
+    let dir_queue: Arc<Mutex<VecDeque<DirJob>>> = Arc::new(Mutex::new(VecDeque::with_capacity(10_000)));
+    dir_queue.lock().unwrap().push_back(DirJob {
+        path: root_path.to_string(),
+        depth: 0,
     });
-    
-    // Drop the original sender so `rx.recv()` terminates when all producers finish
+
+    // Channel: workers → main thread
+    let (tx, rx) = mpsc::channel::<ScannedEntry>();
+
+    // How many workers are actively scanning a directory
+    let active_workers = Arc::new(AtomicU32::new(0));
+    // Signal for workers to stop
+    let scan_done = Arc::new(AtomicBool::new(false));
+
+    let max_depth = config.max_depth;
+    let include_hidden = config.include_hidden;
+
+    // Spawn worker threads
+    let mut handles = Vec::with_capacity(NUM_WORKERS);
+    for _ in 0..NUM_WORKERS {
+        let tx = tx.clone();
+        let queue = dir_queue.clone();
+        let active = active_workers.clone();
+        let done = scan_done.clone();
+        let cancel = cancel_token.cancelled.clone();
+
+        let handle = std::thread::spawn(move || {
+            loop {
+                if cancel.load(Ordering::Relaxed) || done.load(Ordering::Relaxed) {
+                    break;
+                }
+
+                // Pull a directory from the front of the queue (BFS)
+                let job = { queue.lock().unwrap().pop_front() };
+
+                if let Some(job) = job {
+                    active.fetch_add(1, Ordering::SeqCst);
+                    enumerate_directory(&job, max_depth, include_hidden, &tx, &queue, &cancel);
+                    active.fetch_sub(1, Ordering::SeqCst);
+                } else {
+                    // Queue is empty — check if other workers are still active
+                    if active.load(Ordering::SeqCst) == 0 {
+                        // All workers idle + queue empty = scan complete
+                        done.store(true, Ordering::Relaxed);
+                        break;
+                    }
+                    // Wait briefly for other workers to produce new directories
+                    std::thread::sleep(Duration::from_millis(1));
+                }
+            }
+        });
+        handles.push(handle);
+    }
+    // Drop the original tx so rx closes when all workers finish
     drop(tx);
 
+    // === Main thread: receive entries, batch, flush to tree ===
+
     let mut path_to_id: std::collections::HashMap<String, u32> =
-        std::collections::HashMap::with_capacity(100_000);
+        std::collections::HashMap::with_capacity(50_000);
     path_to_id.insert(root_path.to_string(), root_id);
+    path_to_id.insert(normalize_path(root_path), root_id);
 
+    let mut batch: Vec<ScannedEntry> = Vec::with_capacity(BATCH_SIZE);
+    let mut files_scanned: u64 = 0;
+    let mut dirs_scanned: u64 = 0;
+    let mut total_size: u64 = 0;
     let mut last_progress_time = Instant::now();
-    let mut total_dirs = 0;
-    let mut batch_count = 0;
-    
-    let mut active_dirs = std::collections::HashSet::new();
+    let mut last_yield_time = Instant::now();
+    let mut active_dir = root_path.to_string();
 
-    let mut tree_lock = tree_state.write();
-
-    while let Ok(event) = rx.recv() {
-        batch_count += 1;
-
-        match event {
-            ScanEvent::DirStart(p) => {
-                active_dirs.insert(p);
-            }
-            ScanEvent::DirEnd(p) => {
-                active_dirs.remove(&p);
-            }
-            ScanEvent::Entry {
-                path,
-                parent_path,
-                name,
-                is_dir,
-                size,
-                last_modified,
-                node_type,
-                risk_level,
-                access_denied,
-            } => {
-                let parent_id = path_to_id.get(&parent_path).copied();
-
-                let node = FileNode {
-                    id: 0,
-                    parent_id,
-                    name,
-                    path: path.clone(),
-                    size,
-                    file_count: 0,
-                    dir_count: 0,
-                    node_type,
-                    last_modified,
-                    children: Vec::new(),
-                    risk_level,
-                    is_expanded: false,
-                    access_denied,
-                };
-
-                if let Some(tree) = tree_lock.as_mut() {
-                    let node_id = tree.add_node(node);
-                    if let Some(pid) = parent_id {
-                        tree.add_child(pid, node_id);
-                        
-                        let mut current_pid = Some(pid);
-                        while let Some(c_pid) = current_pid {
-                            if let Some(p_node) = tree.get_mut(c_pid) {
-                                p_node.size += size;
-                                if !is_dir {
-                                    p_node.file_count += 1;
-                                }
-                                current_pid = p_node.parent_id;
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-
-                    if is_dir {
-                        path_to_id.insert(path, node_id);
-                        tree.total_dirs += 1;
-                        total_dirs = tree.total_dirs;
-                    } else {
-                        total_size.fetch_add(size, Ordering::Relaxed);
-                        tree.total_size += size;
-                    }
-                }
-                
-                scanned_count.fetch_add(1, Ordering::Relaxed);
-            }
-        }
-
+    for entry in rx {
         if cancel_token.is_cancelled() {
-            let t_dirs = tree_lock.as_ref().map(|t| t.total_dirs as u64).unwrap_or(0);
-            drop(tree_lock);
-            progress_callback(ScanProgress {
-                scanned_files: scanned_count.load(Ordering::Relaxed),
-                scanned_dirs: t_dirs,
-                total_size: total_size.load(Ordering::Relaxed),
-                active_dirs: vec!["Scan cancelled".to_string()],
-                is_complete: false,
-            });
-            return;
+            break;
         }
 
+        // Update counters
+        if entry.is_dir {
+            dirs_scanned += 1;
+            active_dir = entry.path.clone();
+        } else {
+            files_scanned += 1;
+            total_size += entry.size;
+        }
+
+        batch.push(entry);
+
+        // Flush when batch full or time exceeded
         let now = Instant::now();
-        if now.duration_since(last_progress_time).as_millis() >= 50 || batch_count >= 1000 {
-            drop(tree_lock);
-            
-            // Sleep for 1ms to force the OS to schedule the reader thread (Tauri UI)
-            // This prevents RwLock writer starvation!
-            std::thread::sleep(std::time::Duration::from_millis(1));
+        let time_since_yield = now.duration_since(last_yield_time).as_millis();
+        let should_flush = batch.len() >= BATCH_SIZE || time_since_yield >= MAX_COLLECT_MS;
+
+        if should_flush {
+            flush_batch(&mut batch, &tree_state, &mut path_to_id);
+            std::thread::sleep(Duration::from_millis(YIELD_MS));
+            last_yield_time = Instant::now();
 
             if now.duration_since(last_progress_time).as_millis() >= 50 {
                 last_progress_time = now;
-                let t_dirs = total_dirs as u64;
-                let active: Vec<String> = active_dirs.iter().take(15).cloned().collect();
                 progress_callback(ScanProgress {
-                    scanned_files: scanned_count.load(Ordering::Relaxed),
-                    scanned_dirs: t_dirs,
-                    total_size: total_size.load(Ordering::Relaxed),
-                    active_dirs: active,
+                    scanned_files: files_scanned,
+                    scanned_dirs: dirs_scanned,
+                    total_size,
+                    active_dirs: vec![active_dir.clone()],
                     is_complete: false,
                 });
             }
-
-            tree_lock = tree_state.write();
-            batch_count = 0;
         }
     }
 
-    if let Some(tree) = tree_lock.as_mut() {
-        tree.calculate_sizes(root_id);
-        tree.total_size = tree.get(root_id).map(|n| n.size).unwrap_or(0);
+    // Flush remaining entries
+    if !batch.is_empty() {
+        flush_batch(&mut batch, &tree_state, &mut path_to_id);
+    }
+
+    // Wait for worker threads
+    for h in handles {
+        let _ = h.join();
+    }
+
+    drop(path_to_id);
+
+    // Final: aggregate sizes from leaves to root
+    {
+        let mut tree_lock = tree_state.write();
+        if let Some(tree) = tree_lock.as_mut() {
+            tree.calculate_sizes(root_id);
+            tree.total_size = tree.get(root_id).map(|n| n.size).unwrap_or(0);
+
+            progress_callback(ScanProgress {
+                scanned_files: tree.total_files as u64,
+                scanned_dirs: tree.total_dirs as u64,
+                total_size: tree.total_size,
+                active_dirs: Vec::new(),
+                is_complete: true,
+            });
+        }
+    }
+}
+
+/// Worker function: enumerate one directory's children.
+/// Sends entries through the channel and pushes child directories to the queue.
+fn enumerate_directory(
+    job: &DirJob,
+    max_depth: usize,
+    include_hidden: bool,
+    tx: &mpsc::Sender<ScannedEntry>,
+    dir_queue: &Arc<Mutex<VecDeque<DirJob>>>,
+    cancel: &Arc<AtomicBool>,
+) {
+    let entries = match std::fs::read_dir(&job.path) {
+        Ok(e) => e,
+        Err(_) => {
+            // Send a single access-denied entry for the directory itself
+            // (the parent already exists in tree, this just records the error)
+            return;
+        }
+    };
+
+    for entry_result in entries {
+        if cancel.load(Ordering::Relaxed) {
+            return;
+        }
+
+        let entry = match entry_result {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+
+        // Skip hidden files if configured
+        if !include_hidden && file_name.starts_with('.') {
+            continue;
+        }
+
+        // Get metadata — use symlink_metadata for directories to detect reparse points
+        let ft = match entry.file_type() {
+            Ok(ft) => ft,
+            Err(_) => continue,
+        };
+
+        let is_dir_from_ft = ft.is_dir();
         
-        progress_callback(ScanProgress {
-            scanned_files: tree.total_files as u64,
-            scanned_dirs: tree.total_dirs as u64,
-            total_size: tree.total_size,
-            active_dirs: Vec::new(),
-            is_complete: true,
+        // Skip known problematic virtual/sync folders (e.g. Phone Link's CrossDevice)
+        if is_dir_from_ft {
+            let lower_name = file_name.to_lowercase();
+            if lower_name == "crossdevice" {
+                continue;
+            }
+        }
+        let path_str = path.to_string_lossy().to_string();
+
+        let (is_dir, size, last_modified, is_symlink, is_reparse, access_denied) = if is_dir_from_ft {
+            match std::fs::symlink_metadata(&path) {
+                Ok(m) => {
+                    let is_rp = is_reparse_from_metadata(&m);
+                    let lm = m
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs() as i64)
+                        .unwrap_or(0);
+                    (true, 0u64, lm, ft.is_symlink(), is_rp, false)
+                }
+                Err(_) => (true, 0u64, 0i64, false, false, true),
+            }
+        } else {
+            match entry.metadata() {
+                Ok(m) => {
+                    let s = m.len();
+                    let lm = m
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs() as i64)
+                        .unwrap_or(0);
+                    (false, s, lm, ft.is_symlink(), false, false)
+                }
+                Err(_) => (false, 0u64, 0i64, false, false, true),
+            }
+        };
+
+        let node_type = if is_symlink {
+            NodeType::Symlink
+        } else if is_dir {
+            NodeType::Directory
+        } else {
+            NodeType::File
+        };
+
+        // Send entry to main thread
+        let _ = tx.send(ScannedEntry {
+            path: path_str.clone(),
+            parent_path: job.path.clone(),
+            name: file_name,
+            is_dir,
+            is_reparse,
+            size,
+            last_modified,
+            node_type,
+            access_denied,
         });
+
+        // Queue child directory for scanning (BFS: push to back)
+        // Skip reparse points to avoid junction loops
+        if is_dir && !is_reparse && !access_denied {
+            let child_depth = job.depth + 1;
+            if max_depth == 0 || child_depth < max_depth {
+                dir_queue.lock().unwrap().push_back(DirJob {
+                    path: path_str,
+                    depth: child_depth,
+                });
+            }
+        }
+    }
+}
+
+/// Insert a batch of scanned entries into the tree.
+fn flush_batch(
+    batch: &mut Vec<ScannedEntry>,
+    tree_state: &Arc<parking_lot::RwLock<Option<FileTree>>>,
+    path_to_id: &mut std::collections::HashMap<String, u32>,
+) {
+    let mut tree_lock = tree_state.write();
+    if let Some(tree) = tree_lock.as_mut() {
+        for entry in batch.drain(..) {
+            let parent_id = path_to_id
+                .get(&entry.parent_path)
+                .or_else(|| path_to_id.get(&normalize_path(&entry.parent_path)))
+                .copied();
+
+            let node = FileNode {
+                id: 0,
+                parent_id,
+                name: entry.name,
+                path: entry.path.clone(),
+                size: entry.size,
+                file_count: 0,
+                dir_count: 0,
+                node_type: entry.node_type,
+                last_modified: entry.last_modified,
+                children: Vec::new(),
+                risk_level: RiskLevel::Unknown,
+                is_expanded: false,
+                access_denied: entry.access_denied,
+            };
+
+            let node_id = tree.add_node(node);
+            if let Some(pid) = parent_id {
+                tree.add_child(pid, node_id);
+                // Propagate the new node's size and item counts up to the root
+                // This allows the frontend to display sizes of parent directories
+                // instantly as they are being scanned, rather than waiting for the end.
+                tree.propagate_stats(pid, entry.size, entry.is_dir);
+            }
+
+            if entry.is_dir && !entry.is_reparse {
+                path_to_id.insert(entry.path, node_id);
+            }
+        }
+    }
+}
+
+/// Normalize a path for consistent HashMap lookups.
+fn normalize_path(path: &str) -> String {
+    let p = path.replace('/', "\\");
+    p.trim_end_matches('\\').to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::scanner::tree::FileTree;
+    use parking_lot::RwLock;
+
+    #[test]
+    fn test_scan_directory_workspace() {
+        let tree_state = Arc::new(RwLock::new(Some(FileTree::new())));
+        let cancel_token = CancellationToken::new();
+
+        let config = ScanConfig::default();
+        scan_directory(
+            "src",
+            &config,
+            tree_state.clone(),
+            &cancel_token,
+            |progress| {
+                println!("Progress: {:?}", progress);
+            },
+        );
+
+        let lock = tree_state.read();
+        let tree = lock.as_ref().unwrap();
+
+        assert!(tree.total_files > 0, "Should have scanned some files in src");
+        assert!(tree.total_size > 0, "Should have calculated total size greater than 0");
+        let total_nodes = tree.nodes.len() as u32;
+        assert_eq!(
+            tree.total_files + tree.total_dirs, total_nodes,
+            "total_files({}) + total_dirs({}) should equal total node count ({})",
+            tree.total_files, tree.total_dirs, total_nodes
+        );
+    }
+
+    #[test]
+    fn test_reparse_point_detection() {
+        let junction_path = Path::new(r"C:\Documents and Settings");
+        if junction_path.exists() {
+            assert!(
+                is_reparse_point(junction_path),
+                "C:\\Documents and Settings should be detected as a reparse point (junction)"
+            );
+        }
     }
 }
