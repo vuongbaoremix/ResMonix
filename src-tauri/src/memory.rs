@@ -694,6 +694,82 @@ pub fn describe_process(name: &str) -> Option<ProcessDescription> {
             importance: "Bắt buộc — Kiến trúc cốt lõi của Windows".to_string(),
             can_kill: false,
         }),
+        
+        // ===== Resolved Pool Tags =====
+        "file system (ntfs)" | "ntfs file system" => Some(ProcessDescription {
+            what: "NTFS File System Cache".to_string(),
+            description: "Bộ đệm lưu trữ cấu trúc thư mục (MFT) và metadata của ổ cứng NTFS. Sẽ phình to khi quét file hoặc copy dữ liệu lớn.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Quản lý file".to_string(),
+            can_kill: false,
+        }),
+        "file objects" => Some(ProcessDescription {
+            what: "File Objects".to_string(),
+            description: "Cấu trúc dữ liệu đại diện cho các file đang được mở hoặc vừa được đóng bởi các phần mềm.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Quản lý I/O".to_string(),
+            can_kill: false,
+        }),
+        "memory manager section" => Some(ProcessDescription {
+            what: "Memory Manager Section".to_string(),
+            description: "Dùng để ánh xạ file vào bộ nhớ (Memory Mapped Files) và quản lý bộ nhớ chia sẻ.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Quản lý bộ nhớ".to_string(),
+            can_kill: false,
+        }),
+        "thread objects" | "process objects" => Some(ProcessDescription {
+            what: "Process & Thread Objects".to_string(),
+            description: "Cấu trúc dữ liệu lưu thông tin về các tiến trình (Processes) và luồng (Threads) đang chạy.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Quản lý tiến trình".to_string(),
+            can_kill: false,
+        }),
+        "event tracing (etw)" => Some(ProcessDescription {
+            what: "Event Tracing (ETW)".to_string(),
+            description: "Bộ đệm lưu trữ log hệ thống và các sự kiện chẩn đoán của Windows.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Chẩn đoán".to_string(),
+            can_kill: false,
+        }),
+        "registry config manager" => Some(ProcessDescription {
+            what: "Registry Manager".to_string(),
+            description: "Bộ đệm lưu trữ các khóa Registry đang được đọc/ghi.".to_string(),
+            belongs_to: "Windows Kernel".to_string(),
+            importance: "Cấu hình hệ thống".to_string(),
+            can_kill: false,
+        }),
+        "directx graphics kernel" | "video graphics kernel" => Some(ProcessDescription {
+            what: "Graphics Driver Pool".to_string(),
+            description: "Bộ đệm dùng bởi card đồ họa (GPU) để lưu trữ texture, shaders và giao tiếp với phần cứng.".to_string(),
+            belongs_to: "Display Driver".to_string(),
+            importance: "Xử lý đồ họa".to_string(),
+            can_kill: false,
+        }),
+        "ndis network driver" | "tcp/ip protocol" | "udp protocol" | "network system" | "ancillary function driver" => Some(ProcessDescription {
+            what: "Network Drivers & Protocols".to_string(),
+            description: "Bộ đệm mạng dùng để nhận, gửi và xử lý các gói tin Internet (TCP/UDP).".to_string(),
+            belongs_to: "Windows Network".to_string(),
+            importance: "Kết nối mạng".to_string(),
+            can_kill: false,
+        }),
+        "security tokens" | "security subsystem" => Some(ProcessDescription {
+            what: "Security Tokens".to_string(),
+            description: "Dữ liệu xác thực quyền truy cập của người dùng và các phần mềm.".to_string(),
+            belongs_to: "Windows Security".to_string(),
+            importance: "Bảo mật".to_string(),
+            can_kill: false,
+        }),
+        
+        name_lower if name_lower.starts_with("tag: ") => {
+            let tag_name = &name[5..]; // original case
+            Some(ProcessDescription {
+                what: format!("Kernel Pool Tag: {}", tag_name),
+                description: "Một thẻ định danh (Pool Tag) cấp thấp của Kernel hoặc Hardware Driver đang xin cấp phát bộ nhớ RAM trực tiếp.".to_string(),
+                belongs_to: "Windows Kernel / Drivers".to_string(),
+                importance: "Cấu trúc nội bộ".to_string(),
+                can_kill: false,
+            })
+        },
         // ===== System Critical (cannot kill) =====
         "system" | "[system process]" => Some(ProcessDescription {
             what: "Windows Kernel".to_string(),
