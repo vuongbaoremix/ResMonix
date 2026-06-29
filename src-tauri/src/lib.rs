@@ -32,6 +32,7 @@ pub fn run() {
             commands::analyze_process,
             commands::lookup_process_online,
             commands::optimize_memory,
+            commands::deep_clean_memory,
         ])
         .on_page_load(|webview, _payload| {
             let _ = webview.set_background_color(Some(tauri::window::Color(18, 18, 18, 255)));

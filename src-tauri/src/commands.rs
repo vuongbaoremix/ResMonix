@@ -366,3 +366,12 @@ pub async fn optimize_memory(mode: u8) -> Result<u64, String> {
         .await
         .map_err(|e| format!("Task failed: {}", e))?
 }
+
+/// Deep clean kernel caches and standby lists
+#[tauri::command]
+pub async fn deep_clean_memory() -> Result<u64, String> {
+    tokio::task::spawn_blocking(move || memory::deep_clean_memory())
+        .await
+        .map_err(|e| format!("Task failed: {}", e))?
+}
+

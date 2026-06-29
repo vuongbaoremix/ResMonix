@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { message } from "@tauri-apps/plugin-dialog";
+import { message, ask } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { useMemoryStore } from "@/store/useMemoryStore";
 import { formatSize, formatNumber } from "@/lib/format";
 import { ProcessTree } from "./ProcessTree";
@@ -44,6 +45,7 @@ import {
   MemoryStick,
   List,
   LayoutGrid,
+  Rocket,
 } from "lucide-react";
 
 // ===== Memory Overview Bar =====
@@ -206,6 +208,7 @@ function MemoryToolbar() {
   const setMemorySubView = useMemoryStore((s) => s.setMemorySubView);
   const optimizeMemory = useMemoryStore((s) => s.optimizeMemory);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isDeepCleaning, setIsDeepCleaning] = useState(false);
 
   const handleOptimize = async (mode: number) => {
     setIsOptimizing(true);
@@ -220,6 +223,26 @@ function MemoryToolbar() {
       await message(`Lỗi: ${e}`, { title: "Lỗi Tối ưu RAM", kind: "error" });
     } finally {
       setIsOptimizing(false);
+    }
+  };
+
+  const handleDeepClean = async () => {
+    const confirmed = await ask("Tính năng xả sâu bộ đệm (Deep Clean) sẽ xóa hoàn toàn File Cache và Danh sách chờ (Standby List) của hệ thống để thu hồi tối đa lượng RAM có thể.\n\nHành động này có thể làm giảm nhẹ tốc độ truy xuất ổ cứng trong ít phút đầu sau khi dọn.\n\nTiếp tục chạy Deep Clean?", { title: "Cảnh báo xả bộ đệm sâu", kind: "warning" });
+    if (!confirmed) return;
+
+    setIsDeepCleaning(true);
+    try {
+      const freedBytes = await invoke<number>("deep_clean_memory");
+      if (freedBytes > 0) {
+        await message(`Tuyệt vời! Đã thu hồi thành công ${formatSize(freedBytes)} RAM từ hệ thống.`, { title: "Deep Clean", kind: "info" });
+      } else {
+        await message("Đã chạy Deep Clean hoàn tất (không có thêm nhiều RAM được thu hồi).", { title: "Deep Clean", kind: "info" });
+      }
+      fetchProcessTree(); // Refresh UI
+    } catch (e: any) {
+      await message(`Lỗi: ${e}`, { title: "Lỗi Deep Clean", kind: "error" });
+    } finally {
+      setIsDeepCleaning(false);
     }
   };
 
@@ -301,6 +324,41 @@ function MemoryToolbar() {
       </Tooltip>
 
       <div className="flex-1" />
+
+      {/* Deep Clean Rocket Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="sm"
+            onClick={handleDeepClean}
+            disabled={isDeepCleaning}
+            className={`h-7 px-3 gap-1.5 text-xs shadow-md relative overflow-hidden transition-all text-white border-0 ${
+              isDeepCleaning 
+                ? "bg-red-500 opacity-90" 
+                : "bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400"
+            }`}
+            style={{ fontWeight: "600" }}
+          >
+            {isDeepCleaning ? (
+              <Rocket className="h-3.5 w-3.5 animate-bounce" />
+            ) : (
+              <Rocket className="h-3.5 w-3.5" />
+            )}
+            {isDeepCleaning ? "Đang xả RAM..." : "Deep Clean"}
+            
+            {/* Thrust animation effect when running */}
+            {isDeepCleaning && (
+              <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-orange-300 rounded-full blur-md animate-pulse" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="bg-red-950 text-white border-red-800">
+          <p className="font-semibold">Deep Clean (Yêu cầu quyền Admin)</p>
+          <p className="text-xs text-red-200 mt-1">Xả sâu toàn bộ File Cache và Standby List để thu hồi RAM triệt để.</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <div className="h-5 w-px bg-border ml-1 mr-1" />
 
       {/* Optimize Memory */}
       <DropdownMenu>
