@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResMonix — System Resource Manager</title>
+    <style>
+      :root {
+        --bg-color: #ffffff;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --skeleton-bg: rgba(0, 0, 0, 0.08);
+        --skeleton-card: rgba(0, 0, 0, 0.02);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-color: #121212;
+          --border-color: rgba(255, 255, 255, 0.08);
+          --skeleton-bg: rgba(255, 255, 255, 0.08);
+          --skeleton-card: rgba(255, 255, 255, 0.02);
+        }
+      }
+      
+      html, body {
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .skeleton-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100vh;
+      }
+
+      .skeleton-header {
+        height: 48px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+      }
+
+      .skeleton-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: var(--skeleton-bg);
+      }
+
+      .skeleton-title {
+        width: 120px;
+        height: 14px;
+        border-radius: 4px;
+        background: var(--skeleton-bg);
+      }
+
+      .skeleton-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .skeleton-sidebar {
+        width: 48px;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 16px;
+        gap: 16px;
+      }
+
+      .skeleton-sidebar-item {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--skeleton-bg);
+      }
+
+      .skeleton-content {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .skeleton-card-grid {
+        display: flex;
+        gap: 16px;
+      }
+
+      .skeleton-card {
+        flex: 1;
+        height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--skeleton-card);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-sizing: border-box;
+      }
+
+      .skeleton-line {
+        height: 16px;
+        border-radius: 4px;
+        background: var(--skeleton-bg);
+      }
+
+      .skeleton-line.short { width: 40%; }
+      .skeleton-line.medium { width: 60%; }
+      .skeleton-line.long { width: 85%; }
+
+      .pulse {
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes skeleton-pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root">
+      <div class="skeleton-container pulse">
+        <div class="skeleton-header">
+          <div class="skeleton-logo"></div>
+          <div class="skeleton-title"></div>
+        </div>
+        <div class="skeleton-body">
+          <div class="skeleton-sidebar">
+            <div class="skeleton-sidebar-item"></div>
+            <div class="skeleton-sidebar-item"></div>
+            <div class="skeleton-sidebar-item"></div>
+          </div>
+          <div class="skeleton-content">
+            <div style="width: 200px; height: 28px; border-radius: 6px; background: var(--skeleton-bg); margin-bottom: 8px;"></div>
+            <div class="skeleton-card-grid">
+              <div class="skeleton-card">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line long" style="height: 32px; margin-top: 8px;"></div>
+                <div class="skeleton-line medium" style="margin-top: auto;"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line long" style="height: 32px; margin-top: 8px;"></div>
+                <div class="skeleton-line medium" style="margin-top: auto;"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line long" style="height: 32px; margin-top: 8px;"></div>
+                <div class="skeleton-line medium" style="margin-top: auto;"></div>
+              </div>
+            </div>
+            <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 12px; background: var(--skeleton-card); display: flex; align-items: center; justify-content: center;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
