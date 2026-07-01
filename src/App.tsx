@@ -1,21 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { useDiskStore } from "@/store/useDiskStore";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toolbar, StatusBar } from "@/components/Layout/Toolbar";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { DiskToolbar } from "@/components/Layout/DiskToolbar";
-import { Dashboard } from "@/components/Dashboard/Dashboard";
-import { VirtualTree } from "@/components/TreeView/VirtualTree";
-import { DiskTreemap } from "@/components/Treemap/DiskTreemap";
-import { FileDetail } from "@/components/DetailPanel/FileDetail";
-import { SuggestionPanel } from "@/components/Suggestions/SuggestionPanel";
-import { MemoryView } from "@/components/Memory/MemoryView";
-import { DriveSelector } from "@/components/DiskOverview/DriveSelector";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+
+// Lazy-loaded modules — only loaded when the user navigates to them
+const Dashboard = lazy(() => import("@/components/Dashboard/Dashboard").then(m => ({ default: m.Dashboard })));
+const VirtualTree = lazy(() => import("@/components/TreeView/VirtualTree").then(m => ({ default: m.VirtualTree })));
+const DiskTreemap = lazy(() => import("@/components/Treemap/DiskTreemap").then(m => ({ default: m.DiskTreemap })));
+const FileDetail = lazy(() => import("@/components/DetailPanel/FileDetail").then(m => ({ default: m.FileDetail })));
+const SuggestionPanel = lazy(() => import("@/components/Suggestions/SuggestionPanel").then(m => ({ default: m.SuggestionPanel })));
+const MemoryView = lazy(() => import("@/components/Memory/MemoryView").then(m => ({ default: m.MemoryView })));
+const DriveSelector = lazy(() => import("@/components/DiskOverview/DriveSelector").then(m => ({ default: m.DriveSelector })));
 
 // ===== Disk Module Content =====
 
@@ -97,7 +99,9 @@ export default function App() {
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
           <div className="flex-1 overflow-hidden">
-            <ModuleContent />
+            <Suspense fallback={null}>
+              <ModuleContent />
+            </Suspense>
           </div>
         </div>
 
