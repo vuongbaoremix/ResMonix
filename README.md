@@ -6,7 +6,7 @@
 [![Bun](https://img.shields.io/badge/Bun-v2-f9f1e7?logo=bun)](https://bun.sh/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**ResMonix** (originally DiskStat) is a modern, lightweight, and high-performance **Disk Space Analyzer** and **System Resource Manager** for desktop platforms. Built with React + TypeScript on the frontend and Rust on the backend, it offers a native-speed experience with a premium, sleek dark-themed interface.
+**ResMonix** is a modern, lightweight, and high-performance **Disk Space Analyzer** and **System Resource Manager** for desktop platforms. Built with React + TypeScript on the frontend and Rust on the backend, it offers a native-speed experience with a premium, sleek dark-themed interface.
 
 ![Memory Manager Screenshot](images/memory.png)
 
