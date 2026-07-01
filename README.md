@@ -52,7 +52,7 @@ Ensure you have the following installed:
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/ResMonix.git
+git clone https://github.com/vuongbaoremix/ResMonix.git
 cd ResMonix
 bun install
 ```
