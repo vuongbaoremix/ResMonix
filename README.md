@@ -8,7 +8,11 @@
 
 **ResMonix** is a modern, lightweight, and high-performance **Disk Space Analyzer** and **System Resource Manager** for desktop platforms. Built with React + TypeScript on the frontend and Rust on the backend, it offers a native-speed experience with a premium, sleek dark-themed interface.
 
-![Memory Manager Screenshot](images/memory.png)
+### App Gallery
+
+| Memory Manager | Disk Space Analyzer | Memory Treemap |
+| :---: | :---: | :---: |
+| ![Memory Manager](images/memory.png) | ![Disk Space Analyzer](images/disk.png) | ![Memory Treemap](images/memory-treemap.png) |
 
 ---
 
