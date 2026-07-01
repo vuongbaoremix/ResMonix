@@ -69,7 +69,10 @@
     "max": "🔴 Maximum (Requires Admin)",
     "max_desc": "Clean all applications + File Cache",
     "cell_size": "Cell size = RAM usage",
-    "loading_data": "Loading data..."
+    "loading_data": "Loading data...",
+    "history": "History",
+    "admin_required_optimize": "Please run the application as Administrator to optimize memory.",
+    "admin_required_deep_clean": "You need to run ResMonix as Administrator to use Deep Clean."
   },
   "dashboard": {
     "title": "System Overview",
@@ -87,7 +90,8 @@
     "view_details": "View Details",
     "loading_memory": "Loading memory info...",
     "select_drive": "Select a drive to start analyzing",
-    "used": "used"
+    "used": "used",
+    "drives_count": "{{count}} drives"
   },
   "disk": {
     "select_drive": "Select drive...",
@@ -107,6 +111,11 @@
     "dangerous": "Dangerous",
     "folder": "Folder",
     "file": "File",
+    "scanning": "Scanning...",
+    "files_count": "{{count}} files",
+    "dirs_count": "{{count}} folders",
+    "select_drive_scan": "Select a drive and click Scan to start",
+    "unknown": "Unclassified",
     "action_direct_delete": "Direct Delete",
     "action_tool_required": "Tool Required",
     "action_config_change": "Config Change",
@@ -166,7 +175,16 @@
     "kill_immediately": "The process will be terminated immediately.",
     "error": "Error:",
     "system_process_warning": "Critical system process. Terminating may cause errors or BSOD.",
-    "kill_process": "Kill Process"
+    "kill_process": "Kill Process",
+    "published_by": "Published by {{publisher}}",
+    "summary_windows_component": "Windows Component — usually safe",
+    "summary_installed_app": "Officially installed application",
+    "summary_signed": "Publisher information available",
+    "summary_unsigned": "No publisher information — check carefully",
+    "summary_error_privileges": "Could not read process details (PID {{pid}}). Administrator privileges might be required.",
+    "error_kill_failed": "Could not kill process (PID {{pid}}): {{error}}",
+    "error_open_failed": "Could not open process (PID {{pid}}). Try running as Administrator.",
+    "no_description": "No description available."
   },
   "process_kb": {
     "kernel nonpaged pool": {
@@ -672,6 +690,88 @@
       "belongs_to": "Windows Kernel / Drivers",
       "importance": "Internal Structure",
       "can_kill": false
+    }
+  },
+  "suggestions": {
+    "optimize_system_desc": "Optimize system resource suggestions",
+    "temp_files": {
+      "title": "🗑️ Temporary Files",
+      "description": "Temporary files that are no longer needed. Safe to delete.",
+      "category": "Temp Files"
+    },
+    "cache": {
+      "title": "🌐 Browser & App Cache",
+      "description": "Cache from browsers and applications. Deleting will not affect data.",
+      "category": "Cache"
+    },
+    "logs": {
+      "title": "📝 Log Files",
+      "description": "Log files from applications and the system. Safe to delete.",
+      "category": "Logs"
+    },
+    "crash_dumps": {
+      "title": "💥 Crash Dumps",
+      "description": "Crash dump files from crashed applications. Safe to delete if debugging is not needed.",
+      "category": "Crash Dumps"
+    },
+    "development": {
+      "title": "📦 Node Modules",
+      "description": "Found {{count}} node_modules folders. Can be deleted and run 'npm install' to reinstall.",
+      "category": "Development"
+    },
+    "recycle_bin": {
+      "title": "♻️ Recycle Bin",
+      "description": "Data in the Recycle Bin. Permanently delete to free up space.",
+      "category": "Recycle Bin"
+    },
+    "python_cache": {
+      "title": "🐍 Python Cache",
+      "description": "Python bytecode cache (__pycache__). Safe to delete, Python will regenerate them.",
+      "category": "Python Cache"
+    }
+  },
+  "classifier": {
+    "windows_component_store": {
+      "what": "Windows Component Store",
+      "description": "Stores DLL versions and drivers for Windows Update. Cannot be deleted manually.",
+      "belongs_to": "Windows OS",
+      "importance": "Critical — system will fail if deleted"
+    },
+    "wsl_docker_virtual_disk": {
+      "what": "WSL/Docker Virtual Disk",
+      "description": "Virtual disk containing all Linux/Docker containers data. Use 'docker system prune' + 'Optimize-VHD' to shrink.",
+      "belongs_to": "WSL / Docker Desktop",
+      "importance": "Important — contains containers data, do not delete manually"
+    },
+    "hibernation_file": {
+      "what": "Hibernation File",
+      "description": "Hibernation file, size equals RAM. Disable hibernation using 'powercfg -h off' to delete.",
+      "belongs_to": "Windows Power Management",
+      "importance": "Can be disabled if hibernation is not used"
+    },
+    "virtual_memory_page_file": {
+      "what": "Virtual Memory Page File",
+      "description": "Virtual memory page file, used by Windows when RAM is full. Do not delete directly.",
+      "belongs_to": "Windows Memory Manager",
+      "importance": "Critical — system requires it for stability"
+    },
+    "node_js_dependencies": {
+      "what": "Node.js Dependencies",
+      "description": "JavaScript dependencies of the project. Can be deleted and run 'npm install' or 'bun install' to reinstall.",
+      "belongs_to": "Node.js Project",
+      "importance": "Deletable — reinstall via package manager"
+    },
+    "git_repository_data": {
+      "what": "Git Repository Data",
+      "description": "Contains full version control history. Deleting it will lose all commit history.",
+      "belongs_to": "Git Version Control",
+      "importance": "Important — contains code history, push to remote before deleting"
+    },
+    "windows_update_cache": {
+      "what": "Windows Update Cache",
+      "description": "Cache of downloaded Windows updates. Safe to delete, Windows will download again when needed.",
+      "belongs_to": "Windows Update",
+      "importance": "Safe to delete — use Disk Cleanup to delete properly"
     }
   }
 }

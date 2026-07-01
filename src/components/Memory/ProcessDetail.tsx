@@ -57,6 +57,31 @@ function findProcessInTree(
   return null;
 }
 
+// ===== Helper: Translate Rust summary strings to active language =====
+
+function translateSummaryLine(line: string, pid: number, t: any): string {
+  if (line.includes("Phát hành bởi ")) {
+    const publisher = line.split("Phát hành bởi ")[1];
+    return `🏢 ${t("process_detail.published_by", { publisher })}`;
+  }
+  if (line === "✅ Thành phần Windows — thường an toàn") {
+    return `✅ ${t("process_detail.summary_windows_component", "Windows Component — usually safe")}`;
+  }
+  if (line === "✅ Ứng dụng đã cài đặt chính thức") {
+    return `✅ ${t("process_detail.summary_installed_app", "Officially installed application")}`;
+  }
+  if (line === "ℹ️ Có thông tin nhà phát hành") {
+    return `ℹ️ ${t("process_detail.summary_signed", "Publisher information available")}`;
+  }
+  if (line === "⚠️ Không có thông tin nhà phát hành — nên kiểm tra kỹ") {
+    return `⚠️ ${t("process_detail.summary_unsigned", "No publisher information — check carefully")}`;
+  }
+  if (line.startsWith("Không thể đọc thông tin chi tiết")) {
+    return t("process_detail.summary_error_privileges", { pid });
+  }
+  return line;
+}
+
 // ===== Main Component =====
 
 export function ProcessDetail() {
@@ -120,8 +145,17 @@ export function ProcessDetail() {
     if (confirmed) {
       try {
         await killProcess(process.pid);
-      } catch (e) {
-        window.alert(`${t("process_detail.error")} ${e}`);
+      } catch (e: any) {
+        let errMsg = e;
+        if (typeof e === "string") {
+          if (e.includes("Không thể tắt process")) {
+            const innerError = e.split("): ")[1] || "";
+            errMsg = t("process_detail.error_kill_failed", { pid: process.pid, error: innerError });
+          } else if (e.includes("Không thể mở process")) {
+            errMsg = t("process_detail.error_open_failed", { pid: process.pid });
+          }
+        }
+        window.alert(`${t("process_detail.error")} ${errMsg}`);
       }
     }
   };
@@ -337,7 +371,7 @@ export function ProcessDetail() {
             {/* Summary */}
             <div className="rounded-md bg-card border p-2.5 text-xs space-y-1">
               {processAnalysis.analysis_summary.split("\n").map((line, i) => (
-                <p key={i} className="leading-relaxed">{line}</p>
+                <p key={i} className="leading-relaxed">{translateSummaryLine(line, selectedPid, t)}</p>
               ))}
             </div>
           </div>
@@ -355,7 +389,7 @@ export function ProcessDetail() {
 
               <div className="rounded-md bg-muted/50 p-2.5 text-xs space-y-2.5">
                 <p className="leading-relaxed text-muted-foreground">
-                  {onlineInfo.description}
+                  {onlineInfo.description === "Không có mô tả." ? t("process_detail.no_description", "No description available.") : onlineInfo.description}
                 </p>
 
                 {onlineInfo.belongs_to && (

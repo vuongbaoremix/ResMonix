@@ -52,16 +52,19 @@ export function getRiskVariant(
 }
 
 /** Get risk level display text */
-export function getRiskLabel(level: RiskLevel): string {
+export function getRiskLabel(
+  level: RiskLevel,
+  t: any
+): string {
   switch (level) {
     case "safe":
-      return "🟢 An toàn";
+      return `🟢 ${t("disk.safe", "An toàn")}`;
     case "caution":
-      return "🟡 Cẩn thận";
+      return `🟡 ${t("disk.caution", "Cảnh báo")}`;
     case "dangerous":
-      return "🔴 Nguy hiểm";
+      return `🔴 ${t("disk.dangerous", "Nguy hiểm")}`;
     default:
-      return "⚪ Chưa phân loại";
+      return `⚪ ${t("disk.unknown", "Chưa phân loại")}`;
   }
 }
 

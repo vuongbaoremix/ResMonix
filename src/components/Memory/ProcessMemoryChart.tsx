@@ -3,7 +3,10 @@ import { Line, LineChart, ResponsiveContainer, YAxis, Tooltip } from "recharts";
 import { formatSize } from "@/lib/format";
 import { Activity } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 export function ProcessMemoryChart({ pid }: { pid: number }) {
+  const { t } = useTranslation();
   const history = useMemoryStore((s) => s.history);
 
   if (history.length < 2) {
@@ -30,7 +33,7 @@ export function ProcessMemoryChart({ pid }: { pid: number }) {
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
         <Activity className="h-3.5 w-3.5 text-green-500" />
-        <span className="text-xs font-medium">Lịch sử RAM (60s)</span>
+        <span className="text-xs font-medium">{t("memory.ram_history", "Lịch sử RAM (60s)")}</span>
       </div>
       <div className="h-20 w-full rounded-md border bg-card/50 p-1">
         <ResponsiveContainer width="100%" height="100%">

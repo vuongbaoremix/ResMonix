@@ -86,35 +86,46 @@ export function SuggestionPanel() {
 
         {/* Suggestion cards */}
         <div className="space-y-3">
-          {suggestions.map((suggestion, index) => (
-            <Card key={index} className="overflow-hidden">
-              <CardHeader className="p-3 pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    {getActionIcon(suggestion.action_type)}
-                    {suggestion.title}
-                  </CardTitle>
-                  <Badge
-                    variant={getRiskVariant(suggestion.risk_level as any)}
-                    className="text-[10px] shrink-0"
-                  >
-                    {formatSize(suggestion.estimated_savings)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 space-y-2">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {suggestion.description}
-                </p>
+          {suggestions.map((suggestion, index) => {
+            const categoryKey = suggestion.category.toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const translatedTitle = t(`suggestions.${categoryKey}.title`, suggestion.title);
+            const translatedDescription = suggestion.category === "Development"
+              ? t(`suggestions.${categoryKey}.description`, {
+                  defaultValue: suggestion.description,
+                  count: suggestion.paths.length
+                })
+              : t(`suggestions.${categoryKey}.description`, suggestion.description);
+            const translatedCategory = t(`suggestions.${categoryKey}.category`, suggestion.category);
 
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Badge variant="outline" className="text-[10px]">
-                    {getActionLabel(suggestion.action_type, t)}
-                  </Badge>
-                  <span className="text-muted-foreground">
-                    {suggestion.category}
-                  </span>
-                </div>
+            return (
+              <Card key={index} className="overflow-hidden">
+                <CardHeader className="p-3 pb-2">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      {getActionIcon(suggestion.action_type)}
+                      {translatedTitle}
+                    </CardTitle>
+                    <Badge
+                      variant={getRiskVariant(suggestion.risk_level as any)}
+                      className="text-[10px] shrink-0"
+                    >
+                      {formatSize(suggestion.estimated_savings)}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 space-y-2">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {translatedDescription}
+                  </p>
+
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Badge variant="outline" className="text-[10px]">
+                      {getActionLabel(suggestion.action_type, t)}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      {translatedCategory}
+                    </span>
+                  </div>
 
                 {suggestion.command && (
                   <div className="bg-muted rounded-md px-2 py-1.5 font-mono text-[11px] text-muted-foreground">
@@ -157,7 +168,8 @@ export function SuggestionPanel() {
                 )}
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       </div>
     </ScrollArea>

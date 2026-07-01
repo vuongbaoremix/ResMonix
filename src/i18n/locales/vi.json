@@ -69,7 +69,10 @@
     "max": "🔴 Tối đa (Cần Admin)",
     "max_desc": "Dọn toàn bộ ứng dụng + File Cache",
     "cell_size": "Kích thước ô = RAM usage",
-    "loading_data": "Đang tải dữ liệu..."
+    "loading_data": "Đang tải dữ liệu...",
+    "history": "Lịch sử",
+    "admin_required_optimize": "Vui lòng chạy ứng dụng dưới quyền Administrator để tối ưu hóa bộ nhớ.",
+    "admin_required_deep_clean": "Bạn cần chạy ResMonix dưới quyền Administrator để sử dụng Deep Clean."
   },
   "dashboard": {
     "title": "Tổng quan Hệ thống",
@@ -87,7 +90,8 @@
     "view_details": "Xem chi tiết",
     "loading_memory": "Đang tải thông tin bộ nhớ...",
     "select_drive": "Chọn ổ đĩa để bắt đầu phân tích",
-    "used": "đã dùng"
+    "used": "đã dùng",
+    "drives_count": "{{count}} ổ đĩa"
   },
   "disk": {
     "select_drive": "Chọn ổ đĩa...",
@@ -107,6 +111,11 @@
     "dangerous": "Nguy hiểm",
     "folder": "Thư mục",
     "file": "Tệp",
+    "scanning": "Đang quét...",
+    "files_count": "{{count}} tệp",
+    "dirs_count": "{{count}} thư mục",
+    "select_drive_scan": "Chọn ổ đĩa và bấm Quét để bắt đầu",
+    "unknown": "Chưa phân loại",
     "action_direct_delete": "Xóa trực tiếp",
     "action_tool_required": "Cần dùng công cụ",
     "action_config_change": "Thay đổi cấu hình",
@@ -166,7 +175,16 @@
     "kill_immediately": "Process sẽ bị tắt ngay lập tức.",
     "error": "Lỗi:",
     "system_process_warning": "Process hệ thống quan trọng. Tắt có thể gây lỗi hoặc BSOD.",
-    "kill_process": "Tắt Process"
+    "kill_process": "Tắt Process",
+    "published_by": "Phát hành bởi {{publisher}}",
+    "summary_windows_component": "Thành phần Windows — thường an toàn",
+    "summary_installed_app": "Ứng dụng đã cài đặt chính thức",
+    "summary_signed": "Có thông tin nhà phát hành",
+    "summary_unsigned": "Không có thông tin nhà phát hành — nên kiểm tra kỹ",
+    "summary_error_privileges": "Không thể đọc thông tin chi tiết của process (PID {{pid}}). Có thể cần quyền Administrator.",
+    "error_kill_failed": "Không thể tắt process (PID {{pid}}): {{error}}",
+    "error_open_failed": "Không thể mở process (PID {{pid}}). Thử chạy với quyền Administrator.",
+    "no_description": "Không có mô tả."
   },
   "process_kb": {
     "kernel nonpaged pool": {
@@ -672,6 +690,88 @@
       "belongs_to": "Windows Kernel / Drivers",
       "importance": "Cấu trúc nội bộ",
       "can_kill": false
+    }
+  },
+  "suggestions": {
+    "optimize_system_desc": "Đề xuất tối ưu tài nguyên hệ thống",
+    "temp_files": {
+      "title": "🗑️ File tạm thời",
+      "description": "Các file tạm không còn cần thiết. An toàn để xóa.",
+      "category": "File tạm"
+    },
+    "cache": {
+      "title": "🌐 Bộ nhớ đệm",
+      "description": "Cache từ trình duyệt và ứng dụng. Xóa sẽ không ảnh hưởng dữ liệu.",
+      "category": "Bộ nhớ đệm"
+    },
+    "logs": {
+      "title": "📝 File Log",
+      "description": "File log từ ứng dụng và hệ thống. An toàn để xóa.",
+      "category": "Logs"
+    },
+    "crash_dumps": {
+      "title": "💥 Crash Dumps",
+      "description": "File crash dump từ các ứng dụng bị lỗi. An toàn để xóa nếu không cần debug.",
+      "category": "Crash Dumps"
+    },
+    "development": {
+      "title": "📦 Node Modules",
+      "description": "Tìm thấy {{count}} thư mục node_modules. Có thể xóa và chạy 'npm install' để cài lại.",
+      "category": "Phát triển"
+    },
+    "recycle_bin": {
+      "title": "♻️ Thùng rác",
+      "description": "Dữ liệu trong Recycle Bin. Xóa vĩnh viễn để giải phóng dung lượng.",
+      "category": "Thùng rác"
+    },
+    "python_cache": {
+      "title": "🐍 Python Cache",
+      "description": "Python bytecode cache (__pycache__). An toàn xóa, Python sẽ tạo lại.",
+      "category": "Python Cache"
+    }
+  },
+  "classifier": {
+    "windows_component_store": {
+      "what": "Windows Component Store",
+      "description": "Lưu trữ các phiên bản DLL, driver cho Windows Update. Không thể xóa thủ công.",
+      "belongs_to": "Windows OS",
+      "importance": "Rất quan trọng — hệ thống sẽ bị lỗi nếu xóa"
+    },
+    "wsl_docker_virtual_disk": {
+      "what": "WSL/Docker Virtual Disk",
+      "description": "Ổ đĩa ảo chứa toàn bộ dữ liệu Linux/Docker containers. Dùng 'docker system prune' + 'Optimize-VHD' để thu nhỏ.",
+      "belongs_to": "WSL / Docker Desktop",
+      "importance": "Quan trọng — chứa dữ liệu containers, không xóa thủ công"
+    },
+    "hibernation_file": {
+      "what": "Hibernation File",
+      "description": "File hibernation, kích thước bằng RAM. Tắt hibernate bằng 'powercfg -h off' để xóa.",
+      "belongs_to": "Windows Power Management",
+      "importance": "Có thể tắt nếu không dùng hibernate"
+    },
+    "virtual_memory_page_file": {
+      "what": "Virtual Memory Page File",
+      "description": "File bộ nhớ ảo, Windows sử dụng khi RAM đầy. Không xóa trực tiếp.",
+      "belongs_to": "Windows Memory Manager",
+      "importance": "Rất quan trọng — hệ thống cần để hoạt động ổn định"
+    },
+    "node_js_dependencies": {
+      "what": "Node.js Dependencies",
+      "description": "Thư viện JavaScript của dự án. Có thể xóa và chạy 'npm install' hoặc 'bun install' để cài lại.",
+      "belongs_to": "Node.js Project",
+      "importance": "Có thể xóa — cài lại bằng package manager"
+    },
+    "git_repository_data": {
+      "what": "Git Repository Data",
+      "description": "Chứa toàn bộ lịch sử version control. Xóa sẽ mất lịch sử commit.",
+      "belongs_to": "Git Version Control",
+      "importance": "Quan trọng — chứa lịch sử code, nên push remote trước khi xóa"
+    },
+    "windows_update_cache": {
+      "what": "Windows Update Cache",
+      "description": "Cache các bản cập nhật Windows đã tải. An toàn để xóa, Windows sẽ tải lại khi cần.",
+      "belongs_to": "Windows Update",
+      "importance": "An toàn xóa — dùng Disk Cleanup để xóa đúng cách"
     }
   }
 }

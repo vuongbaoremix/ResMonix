@@ -69,7 +69,7 @@ export function FileDetail() {
 
           {/* Risk badge */}
           <Badge variant={getRiskVariant(selectedNode.risk_level)} className="text-xs">
-            {getRiskLabel(selectedNode.risk_level)}
+            {getRiskLabel(selectedNode.risk_level, t)}
           </Badge>
         </div>
 
@@ -110,36 +110,39 @@ export function FileDetail() {
         </div>
 
         {/* File description (from knowledge base) */}
-        {fileDescription && (
-          <>
-            <Separator />
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-medium">
-                  {fileDescription.what}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {fileDescription.description}
-              </p>
-              <div className="text-xs space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("disk.belongs_to")}</span>
-                  <span className="font-medium">
-                    {fileDescription.belongs_to}
+        {fileDescription && (() => {
+          const descKey = `classifier.${fileDescription.what.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+          return (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-medium">
+                    {t(`${descKey}.what`, fileDescription.what)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("disk.importance")}</span>
-                  <span className="font-medium">
-                    {fileDescription.importance}
-                  </span>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(`${descKey}.description`, fileDescription.description)}
+                </p>
+                <div className="text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("disk.belongs_to")}</span>
+                    <span className="font-medium">
+                      {t(`${descKey}.belongs_to`, fileDescription.belongs_to)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("disk.importance")}</span>
+                    <span className="font-medium">
+                      {t(`${descKey}.importance`, fileDescription.importance)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          );
+        })()}
 
         {selectedNode.access_denied && (
           <>

@@ -4,6 +4,7 @@ import { formatSize } from "@/lib/format";
 import type { ProcessTreeNode, ProcessType } from "@/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ProcessSparkline } from "./ProcessSparkline";
+import { useTranslation } from "react-i18next";
 import {
   ChevronRight,
   ChevronDown,
@@ -185,6 +186,7 @@ function ProcessRow({
 // ===== Main Process Tree =====
 
 export function ProcessTree() {
+  const { t } = useTranslation();
   const processTree = useMemoryStore((s) => s.processTree);
   const expandedPids = useMemoryStore((s) => s.expandedPids);
   const searchQuery = useMemoryStore((s) => s.searchQuery);
@@ -269,23 +271,23 @@ export function ProcessTree() {
       {/* Header Row */}
       <div className="flex items-center gap-1.5 py-1.5 px-2 border-b text-xs font-semibold text-muted-foreground bg-muted/30 sticky top-0 z-10 shrink-0 pr-4">
         <div className="flex-1 min-w-0 pl-6">
-          <SortHeader field="name" label="Process" />
+          <SortHeader field="name" label={t("memory.processes", "Process")} />
         </div>
         <div className="w-[80px] shrink-0 text-center pr-3 hidden md:block">
-          Lịch sử
+          {t("memory.history", "Lịch sử")}
         </div>
         <div className="w-[110px] shrink-0 text-right">
-          <SortHeader field="working_set" label="% RAM" className="text-right" />
+          <SortHeader field="working_set" label={t("process_detail.ram_percent", "% RAM")} className="text-right" />
         </div>
         <div className="w-[84px] shrink-0 text-right">
-          <SortHeader field="working_set" label="Working Set" className="text-right" />
+          <SortHeader field="working_set" label={t("process_detail.working_set", "Working Set")} className="text-right" />
         </div>
         <div className="w-[84px] shrink-0 text-right hidden lg:block">
-          <SortHeader field="private_bytes" label="Private" className="text-right" />
+          <SortHeader field="private_bytes" label={t("process_detail.private_bytes", "Private")} className="text-right" />
         </div>
-        <div className="w-[84px] shrink-0 text-right">Subtree WS</div>
+        <div className="w-[84px] shrink-0 text-right">{t("process_detail.subtree_ws", "Subtree WS")}</div>
         <div className="w-[84px] shrink-0 text-right hidden xl:block">
-          Subtree Priv
+          {t("process_detail.subtree_private", "Subtree Priv")}
         </div>
       </div>
 

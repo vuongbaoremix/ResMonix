@@ -223,7 +223,10 @@ function MemoryToolbar() {
         await message(t("memory.optimize_done"), { title: t("memory.optimize_btn"), kind: "info" });
       }
     } catch (e: any) {
-      await message(t("memory.error", { msg: e }), { title: t("memory.optimize_error"), kind: "error" });
+      const errMsg = e === "Vui lòng chạy ứng dụng dưới quyền Administrator để tối ưu hóa bộ nhớ."
+        ? t("memory.admin_required_optimize", "Please run the application as Administrator to optimize memory.")
+        : e;
+      await message(t("memory.error", { msg: errMsg }), { title: t("memory.optimize_error"), kind: "error" });
     } finally {
       setIsOptimizing(false);
     }
@@ -243,7 +246,10 @@ function MemoryToolbar() {
       }
       fetchProcessTree(); // Refresh UI
     } catch (e: any) {
-      await message(t("memory.error", { msg: e }), { title: t("memory.deep_clean_error"), kind: "error" });
+      const errMsg = e === "Bạn cần chạy ResMonix dưới quyền Administrator để sử dụng Deep Clean."
+        ? t("memory.admin_required_deep_clean", "You need to run ResMonix as Administrator to use Deep Clean.")
+        : e;
+      await message(t("memory.error", { msg: errMsg }), { title: t("memory.deep_clean_error"), kind: "error" });
     } finally {
       setIsDeepCleaning(false);
     }

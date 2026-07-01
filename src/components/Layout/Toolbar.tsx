@@ -78,6 +78,7 @@ export function Toolbar() {
 }
 
 export function StatusBar() {
+  const { t } = useTranslation();
   const activeModule = useDiskStore((s) => s.activeModule);
   const isScanning = useDiskStore((s) => s.isScanning);
   const scanProgress = useDiskStore((s) => s.scanProgress);
@@ -96,7 +97,7 @@ export function StatusBar() {
           <>
             <span className="flex items-center gap-1">
               <HardDrive className="h-3 w-3" />
-              {drives.length} ổ đĩa
+              {t("dashboard.drives_count", { count: drives.length })}
             </span>
             {memorySummary && (
               <span>
@@ -111,7 +112,7 @@ export function StatusBar() {
           <>
             {isScanning ? (
               <>
-                <span className="scan-pulse">⏳ Đang quét...</span>
+                <span className="scan-pulse">⏳ {t("disk.scanning", "Đang quét...")}</span>
                 {scanProgress && (
                   <span>
                     {formatNumber(scanProgress.scanned_files)} files •{" "}
@@ -123,11 +124,11 @@ export function StatusBar() {
               <>
                 <span className="flex items-center gap-1">
                   <Files className="h-3 w-3" />
-                  {formatNumber(scanComplete.total_files)} files
+                  {t("disk.files_count", { count: scanComplete.total_files })}
                 </span>
                 <span className="flex items-center gap-1">
                   <FolderTree className="h-3 w-3" />
-                  {formatNumber(scanComplete.total_dirs)} thư mục
+                  {t("disk.dirs_count", { count: scanComplete.total_dirs })}
                 </span>
                 <span className="flex items-center gap-1">
                   <HardDrive className="h-3 w-3" />
@@ -135,7 +136,7 @@ export function StatusBar() {
                 </span>
               </>
             ) : (
-              <span>Chọn ổ đĩa và bấm Quét để bắt đầu</span>
+              <span>{t("disk.select_drive_scan", "Chọn ổ đĩa và bấm Quét để bắt đầu")}</span>
             )}
           </>
         )}
@@ -158,7 +159,7 @@ export function StatusBar() {
         )}
 
         {activeModule === "suggestions" && (
-          <span>Đề xuất tối ưu tài nguyên hệ thống</span>
+          <span>{t("suggestions.optimize_system_desc", "Đề xuất tối ưu tài nguyên hệ thống")}</span>
         )}
       </div>
 
